@@ -1,0 +1,31 @@
+- name: Create n8n stack directory
+  ansible.builtin.file:
+    path: "{{ stacks_root }}/apps/n8n"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Render n8n docker-compose.yml
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ n8n_stack_dir }}/docker-compose.yml"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart n8n stack
+
+- name: Render n8n .env (secrets from vault)
+  ansible.builtin.template:
+    src: .env.j2
+    dest: "{{ n8n_stack_dir }}/.env"
+    owner: root
+    group: root
+    mode: "0600"
+  notify: Restart n8n stack
+
+- name: Deploy n8n stack
+  community.docker.docker_compose_v2:
+    project_src: "{{ n8n_stack_dir }}"
+    state: present
+    pull: missing

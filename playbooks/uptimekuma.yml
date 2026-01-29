@@ -1,0 +1,8 @@
+- name: Bootstrap ALTAIR for Uptime Kuma
+  hosts: altair_sv
+  become: true
+  vars_files:
+    - ../group_vars/all.yml
+
+  roles:
+    - uptime-kuma

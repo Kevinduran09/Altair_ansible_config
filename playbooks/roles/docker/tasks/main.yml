@@ -1,0 +1,46 @@
+- name: Install Docker pre
+  apt:
+    name:
+      - gnupg
+      - lsb-release
+    state: present
+
+- name: Add Docker GPG key
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+- name: Add Docker repository
+  apt_repository:
+    repo: deb https://download.docker.com/linux/ubuntu focal stable
+    state: present
+
+- name: Update apt cache after Docker repo
+  apt:
+    update_cache: yes
+
+- name: Install Docker packages
+  apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+
+- name: Enable docker service
+  systemd:
+    name: docker
+    enabled: yes
+
+- name: Start docker service
+  systemd:
+    name: docker
+    state: started
+
+- name: Add admin user to docker group
+  user:
+    name: "{{ admin_user }}"
+    groups: docker
+    append: true

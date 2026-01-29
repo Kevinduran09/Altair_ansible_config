@@ -1,0 +1,20 @@
+admin_user: "kduran"
+admin_ssh_pubkey: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHAZ0CLm+/vpRD4tpwAR/ubsbTAloBxeb1BPrCNProUP upcloud-vps"
+
+# SSH
+ssh_port: 22
+
+# Stacks
+stacks_root: /srv/stacks
+
+# Nginx Proxy Manager
+npm_http_port: 80
+npm_https_port: 443
+npm_admin_port: 81
+
+# Email
+admin_email: "kevinduran.net.123@gmail.com"
+
+# n8n Variables
+
+n8n_port: 5678

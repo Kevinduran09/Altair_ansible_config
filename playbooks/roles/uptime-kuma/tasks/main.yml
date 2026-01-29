@@ -1,0 +1,30 @@
+- name: Create UpTime Kuma folders
+  file:
+    path: "{{ stacks_root }}/tools/uptime-kuma"
+    state: directory
+    owner: "{{ admin_user }}"
+    group: "{{ admin_user }}"
+    mode: "0755"
+
+- name: Copy Docker compose file for UpTime Kuma
+  template:
+    src: docker-compose.yml.j2
+    dest: "{{ stacks_root }}/tools/uptime-kuma/docker-compose.yml"
+    owner: "{{ admin_user }}"
+    group: "{{ admin_user }}"
+    mode: "0644"
+
+- name: Ensure UpTime Kuma up
+  community.docker.docker_compose_v2:
+    project_src: "{{ stacks_root }}/tools/uptime-kuma"
+    state: present
+
+- name: Check Uptime Kuma from Docker proxy network
+  command: >
+    docker run --rm --network proxy curlimages/curl:8.5.0
+    -fsSI http://uptime-kuma:3001
+  register: kuma_check
+  retries: 12
+  delay: 5
+  until: kuma_check.rc == 0
+  changed_when: false

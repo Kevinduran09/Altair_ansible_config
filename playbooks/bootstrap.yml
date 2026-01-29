@@ -1,0 +1,12 @@
+- name: Bootstrap ALTAIR config
+  hosts: altair_sv
+  become: true
+  vars_files:
+    - ../group_vars/all.yml
+
+  roles:
+    - base
+    - security
+    - docker
+    - stacks
+    - npm

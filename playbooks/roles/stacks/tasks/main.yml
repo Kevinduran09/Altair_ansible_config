@@ -1,0 +1,24 @@
+- name: Create stacks root
+  file:
+    path: "{{ stacks_root  }}"
+    state: directory
+    owner: "{{ admin_user }}"
+    group: "{{ admin_user }}"
+    mode: "0755"
+
+- name: Create stacks folders
+  file:
+    path: "{{ stacks_root }}/{{ item }}"
+    state: directory
+    owner: "{{ admin_user }}"
+    group: "{{ admin_user }}"
+    mode: "0755"
+  loop:
+    - infra
+    - apps
+    - tools
+
+- name: Create shared docker network
+  community.docker.docker_network:
+    name: proxy
+    state: present

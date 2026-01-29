@@ -1,0 +1,20 @@
+- name: Create NPM directory
+  file:
+    path: "{{ stacks_root }}/infra/nginx-proxy-manager"
+    state: directory
+    owner: "{{ admin_user }}"
+    group: "{{ admin_user }}"
+    mode: "0755"
+
+- name: Render docker-compose file for NPM
+  template:
+    src: docker-compose.yml.j2
+    dest: "{{ stacks_root }}/infra/nginx-proxy-manager/docker-compose.yml"
+    owner: "{{ admin_user }}"
+    group: "{{ admin_user }}"
+    mode: "0644"
+
+- name: Ensure NPM up
+  community.docker.docker_compose_v2:
+    project_src: "{{ stacks_root}}/infra/nginx-proxy-manager"
+    state: present
