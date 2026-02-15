@@ -1,0 +1,19 @@
+- domain_names:
+    - portainer-kduranet.duckdns.org
+  forward_host: "{{ proxy_forward_host }}"
+  forward_port: 9000
+  forward_scheme: http
+  caching_enabled: false
+  block_exploits: false
+  allow_websocket_upgrade: true
+  ssl_forced: true
+  http2_support: true
+  hsts_enabled: true
+  hsts_subdomains: false
+  enabled: true
+  meta:
+    letsencrypt_agree: true
+    dns_challenge: false
+    onlyTailScale: true
+  advanced_config: ""
+  locations: []
