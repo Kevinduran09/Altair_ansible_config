@@ -1,3 +1,11 @@
+- name: Check if Uptime Kuma is already running
+  ansible.builtin.command:
+    cmd: docker compose ps -q --status running
+    chdir: "{{ stacks_root }}/tools/uptime-kuma"
+  register: kuma_running
+  changed_when: false
+  failed_when: false
+
 - name: Create UpTime Kuma folders
   file:
     path: "{{ stacks_root }}/tools/uptime-kuma"
@@ -5,6 +13,7 @@
     owner: "{{ admin_user }}"
     group: "{{ admin_user }}"
     mode: "0755"
+  when: kuma_running.stdout | default('') | length == 0
 
 - name: Copy Docker compose file for UpTime Kuma
   template:
@@ -13,11 +22,13 @@
     owner: "{{ admin_user }}"
     group: "{{ admin_user }}"
     mode: "0644"
+  when: kuma_running.stdout | default('') | length == 0
 
 - name: Ensure UpTime Kuma up
   community.docker.docker_compose_v2:
     project_src: "{{ stacks_root }}/tools/uptime-kuma"
     state: present
+  when: kuma_running.stdout | default('') | length == 0
 
 - name: Check Uptime Kuma from Docker proxy network
   command: >
@@ -28,3 +39,9 @@
   delay: 5
   until: kuma_check.rc == 0
   changed_when: false
+  when: kuma_running.stdout | default('') | length == 0
+
+- name: Uptime Kuma already running – skipping
+  ansible.builtin.debug:
+    msg: "Uptime Kuma ya está corriendo, se omite la instalación."
+  when: kuma_running.stdout | default('') | length > 0

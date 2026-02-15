@@ -1,78 +1,105 @@
+# tasks/main.yml (o bloque dentro de tu play)
+
+- name: Validate admin_ssh_pubkey is present
+  ansible.builtin.assert:
+    that:
+      - admin_ssh_pubkey is defined
+      - admin_ssh_pubkey | trim | length > 0
+      - admin_ssh_pubkey is match('^(ssh-ed25519|ssh-rsa|ecdsa-sha2-nistp(256|384|521))\\s+[A-Za-z0-9+/=]+(\\s+.*)?$')
+    fail_msg: "admin_ssh_pubkey inválida o vacía"
+
 - name: Register admin user
-  user:
+  ansible.builtin.user:
     name: "{{ admin_user }}"
     groups: sudo
     append: true
     shell: /bin/bash
     create_home: true
+    state: present
+
+- name: Ensure .ssh directory exists for admin user
+  ansible.builtin.file:
+    path: "/home/{{ admin_user }}/.ssh"
+    state: directory
+    owner: "{{ admin_user }}"
+    group: "{{ admin_user }}"
+    mode: "0700"
+
+- name: Add SSH public key for admin user
+  ansible.posix.authorized_key:
+    user: "{{ admin_user }}"
+    key: "{{ admin_ssh_pubkey | trim }}"
+    state: present
+    manage_dir: false
 
 - name: Allow admin user passwordless sudo
-  copy:
+  ansible.builtin.copy:
     dest: "/etc/sudoers.d/{{ admin_user }}"
     content: "{{ admin_user }} ALL=(ALL) NOPASSWD:ALL\n"
     owner: root
     group: root
     mode: "0440"
+    validate: "/usr/sbin/visudo -cf %s"
 
-- name: Add SSH public key for admin user
-  authorized_key:
-    user: "{{ admin_user }}"
-    key: "{{ admin_ssh_pubkey }}"
-    state: present
-
-- name: Disabled root login
-  lineinfile:
-    path: /etc/ssh/sshd_config
-    regexp: '^#?PermitRootLogin\s+'
-    line: "PermitRootLogin no"
-  notify: Restart ssh
-
-- name: Disabled password auth
-  lineinfile:
-    path: /etc/ssh/sshd_config
-    regexp: '^#?PasswordAuthentication\s+'
-    line: "PasswordAuthentication no"
-  notify: Restart ssh
-
-- name: Disabled challenge-response
-  lineinfile:
-    path: /etc/ssh/sshd_config
-    regexp: '^#?ChallengeResponseAuthentication\s+'
-    line: "ChallengeResponseAuthentication no"
-  notify: Restart ssh
-
-- name: Change SSH port
-  lineinfile:
-    path: /etc/ssh/sshd_config
-    regexp: '^#?Port\s+'
-    line: "Port {{ ssh_port }}"
-  notify: Restart ssh
-
-- name: Enable ufw
-  ufw:
-    state: enabled
-    policy: deny
-
+# ---- Firewall safe order: allow first, then enable deny ----
 - name: Allow SSH
-  ufw:
+  community.general.ufw:
     rule: allow
     port: "{{ ssh_port }}"
     proto: tcp
 
 - name: Allow HTTP
-  ufw:
+  community.general.ufw:
     rule: allow
     port: "80"
     proto: tcp
 
 - name: Allow HTTPS
-  ufw:
+  community.general.ufw:
     rule: allow
     port: "443"
     proto: tcp
 
+- name: Enable ufw with deny incoming policy
+  community.general.ufw:
+    state: enabled
+    policy: deny
+
+# ---- SSH hardening with config validation ----
+- name: Set SSH Port
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?Port\s+'
+    line: "Port {{ ssh_port }}"
+    validate: "/usr/sbin/sshd -t -f %s"
+  notify: Restart ssh
+
+- name: Disable root login
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?PermitRootLogin\s+'
+    line: "PermitRootLogin no"
+    validate: "/usr/sbin/sshd -t -f %s"
+  notify: Restart ssh
+
+- name: Disable password auth
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?PasswordAuthentication\s+'
+    line: "PasswordAuthentication no"
+    validate: "/usr/sbin/sshd -t -f %s"
+  notify: Restart ssh
+
+- name: Disable challenge-response auth
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?ChallengeResponseAuthentication\s+'
+    line: "ChallengeResponseAuthentication no"
+    validate: "/usr/sbin/sshd -t -f %s"
+  notify: Restart ssh
+
 - name: Ensure fail2ban enabled
-  service:
+  ansible.builtin.service:
     name: fail2ban
     state: started
     enabled: true
