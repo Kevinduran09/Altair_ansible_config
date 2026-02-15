@@ -1,0 +1,15 @@
+services:
+  portfolio:
+    build:
+      context: ./repo
+      dockerfile: Dockerfile
+    container_name: portfolio-kevinduran
+    restart: unless-stopped
+    mem_limit: 128m
+    cpus: 0.5
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    external: true

@@ -1,0 +1,8 @@
+- name: Deploy Portfolio to ALTAIR
+  hosts: altair_sv
+  become: true
+  vars_files:
+    - ../group_vars/all.yml
+
+  roles:
+    - portfolio

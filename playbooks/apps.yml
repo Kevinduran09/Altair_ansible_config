@@ -1,0 +1,12 @@
+- name: Deploy all applications to ALTAIR
+  hosts: altair_sv
+  become: true
+  vars_files:
+    - ../group_vars/all.yml
+
+  roles:
+    - uptime-kuma
+    - portfolio
+    - portainer
+    - n8n
+  
