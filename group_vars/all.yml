@@ -1,5 +1,5 @@
+# usernames
 admin_user: "kduran"
-admin_ssh_pubkey: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHAZ0CLm+/vpRD4tpwAR/ubsbTAloBxeb1BPrCNProUP upcloud-vps"
 
 # SSH
 ssh_port: 22

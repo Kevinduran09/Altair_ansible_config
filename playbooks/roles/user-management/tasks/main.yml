@@ -1,0 +1,106 @@
+- name: Validate managed_users is defined
+  ansible.builtin.assert:
+    that:
+      - managed_users is defined
+      - managed_users is sequence
+    fail_msg: "Define managed_users en group_vars/users.yml"
+
+- name: Validate managed_users has unique usernames
+  ansible.builtin.assert:
+    that:
+      - (managed_users | map(attribute='username') | list | length) == (managed_users | map(attribute='username') | list | unique | length)
+    fail_msg: "Hay usernames duplicados en managed_users"
+
+- name: Validate required fields for each managed user
+  ansible.builtin.assert:
+    that:
+      - item.username is defined
+      - item.username | trim | length > 0
+      - (item.state | default('present')) in ['present', 'absent']
+    fail_msg: "Cada usuario debe tener username y state valido (present/absent)"
+  loop: "{{ managed_users }}"
+
+- name: Get existing system users
+  ansible.builtin.getent:
+    database: passwd
+
+- name: Ensure managed users are present
+  ansible.builtin.user:
+    name: "{{ item.username }}"
+    state: present
+    shell: "{{ item.shell | default('/bin/bash') }}"
+    create_home: "{{ item.create_home | default(true) | bool }}"
+    groups: "{{ (item.groups | default([])) | join(',') if (item.groups | default([]) | length > 0) else omit }}"
+    append: "{{ item.append_groups | default(true) | bool }}"
+    password: "{{ item.password_hash | default(omit) }}"
+    comment: "{{ item.comment | default(omit) }}"
+  loop: "{{ managed_users }}"
+  when: (item.state | default('present')) == 'present'
+
+- name: Ensure managed users are absent
+  ansible.builtin.user:
+    name: "{{ item.username }}"
+    state: absent
+    remove: "{{ item.remove_home | default(false) | bool }}"
+  loop: "{{ managed_users }}"
+  when: (item.state | default('present')) == 'absent'
+
+- name: Ensure .ssh directory exists for users with keys
+  ansible.builtin.file:
+    path: "/home/{{ item.username }}/.ssh"
+    state: directory
+    owner: "{{ item.username }}"
+    group: "{{ item.username }}"
+    mode: "0700"
+  loop: "{{ managed_users }}"
+  when:
+    - (item.state | default('present')) == 'present'
+    - (item.ssh_public_keys | default([]) | length) > 0
+
+- name: Set authorized keys for managed users
+  ansible.posix.authorized_key:
+    user: "{{ item.0.username }}"
+    key: "{{ item.1 }}"
+    state: present
+    manage_dir: false
+  loop: "{{ query('subelements', managed_users, 'ssh_public_keys', {'skip_missing': True}) }}"
+  when: (item.0.state | default('present')) == 'present'
+
+- name: Ensure sudoers for nopasswd users
+  ansible.builtin.copy:
+    dest: "/etc/sudoers.d/{{ item.username }}"
+    content: "{{ item.username }} ALL=(ALL) NOPASSWD:ALL\n"
+    owner: root
+    group: root
+    mode: "0440"
+    validate: "/usr/sbin/visudo -cf %s"
+  loop: "{{ managed_users }}"
+  when:
+    - (item.state | default('present')) == 'present'
+    - item.sudo_nopasswd | default(false)
+
+- name: Remove sudoers file when nopasswd is disabled or user absent
+  ansible.builtin.file:
+    path: "/etc/sudoers.d/{{ item.username }}"
+    state: absent
+  loop: "{{ managed_users }}"
+  when:
+    - (item.state | default('present')) == 'absent' or not (item.sudo_nopasswd | default(false))
+
+- name: Report users that already existed
+  ansible.builtin.debug:
+    msg: "El usuario {{ item.username }} ya existia y fue validado/actualizado sin duplicar."
+  loop: "{{ managed_users }}"
+  when:
+    - (item.state | default('present')) == 'present'
+    - item.username in (ansible_facts.getent_passwd | default({}))
+
+- name: Remove users from explicit removal list (optional)
+  ansible.builtin.user:
+    name: "{{ item }}"
+    state: absent
+    remove: false
+  loop: "{{ users_to_remove | default([]) }}"
+  when:
+    - remove_unmanaged_users | default(false)
+    - item not in (protected_users | default(['root']))

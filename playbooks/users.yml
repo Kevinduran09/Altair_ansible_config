@@ -1,4 +1,4 @@
-- name: Bootstrap ALTAIR config
+- name: Manage users on ALTAIR
   hosts: altair_sv
   become: true
   vars_files:
@@ -6,9 +6,4 @@
     - ../group_vars/users.yml
 
   roles:
-    - base
     - user-management
-    - security
-    - docker
-    - stacks
-    - npm

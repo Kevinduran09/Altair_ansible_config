@@ -1,0 +1,22 @@
+admin_user_ssh_pubkey: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHAZ0CLm+/vpRD4tpwAR/ubsbTAloBxeb1BPrCNProUP upcloud-vps"
+
+managed_users:
+  - username: "{{ admin_user }}"
+    state: present
+    shell: /bin/bash
+    create_home: true
+    groups:
+      - sudo
+      - docker
+    append_groups: true
+    sudo_nopasswd: true
+    ssh_public_keys:
+      - "{{ admin_user_ssh_pubkey }}"
+
+
+protected_users:
+  - root
+
+
+remove_unmanaged_users: false
+users_to_remove: []
