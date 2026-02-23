@@ -1,14 +1,14 @@
 - name: Check if Portainer is already running
   ansible.builtin.command:
     cmd: docker compose ps -q --status running
-    chdir: "{{ stacks_root }}/tools/portainer"
+    chdir: "{{ tools_root }}/portainer"
   register: portainer_running
   changed_when: false
   failed_when: false
 
 - name: Create Portainer folders
   file:
-    path: "{{ stacks_root }}/tools/portainer"
+    path: "{{ tools_root }}/portainer"
     state: directory
     owner: "{{ admin_user }}"
     group: "{{ admin_user }}"
@@ -18,7 +18,7 @@
 - name: Copy Docker compose file for Portainer
   template:
     src: docker-compose.yml.j2
-    dest: "{{ stacks_root }}/tools/portainer/docker-compose.yml"
+    dest: "{{ tools_root }}/portainer/docker-compose.yml"
     owner: "{{ admin_user }}"
     group: "{{ admin_user }}"
     mode: "0644"
@@ -26,7 +26,7 @@
 
 - name: Ensure Portainer up
   community.docker.docker_compose_v2:
-    project_src: "{{ stacks_root }}/tools/portainer"
+    project_src: "{{ tools_root }}/portainer"
     state: present
   when: portainer_running.stdout | default('') | length == 0
 

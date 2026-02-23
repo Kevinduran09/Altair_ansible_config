@@ -1,6 +1,6 @@
 - name: Create stacks root
   file:
-    path: "{{ stacks_root  }}"
+    path: "{{ stacks_root }}"
     state: directory
     owner: "{{ admin_user }}"
     group: "{{ admin_user }}"
@@ -17,6 +17,68 @@
     - infra
     - apps
     - tools
+    - data-services
+
+
+- name: Create persistent data root
+  file:
+    path: "{{ data_root }}"
+    state: directory
+    owner: "{{ admin_user }}"
+    group: "{{ admin_user }}"
+    mode: "0755"
+
+- name: Create persistent data folders
+  file:
+    path: "{{ data_root }}/{{ item }}"
+    state: directory
+    owner: "{{ admin_user }}"
+    group: "{{ admin_user }}"
+    mode: "0755"
+  loop:
+    - databases
+    - apps
+    - shared
+
+- name: Create personal folder
+  file:
+    path: "{{ personal_root }}"
+    state: directory
+    owner: "{{ admin_user }}"
+    group: "{{ admin_user }}"
+    mode: "0755"
+
+- name: Create backups folder
+  file:
+    path: "{{ backups_root }}"
+    state: directory
+    owner: "{{ admin_user }}"
+    group: "{{ admin_user }}"
+    mode: "0755"
+
+- name: Create scripts folder
+  file:
+    path: "{{ scripts_root }}"
+    state: directory
+    owner: "{{ admin_user }}"
+    group: "{{ admin_user }}"
+    mode: "0755"
+
+- name: Create config folder
+  file:
+    path: "{{ config_root }}"
+    state: directory
+    owner: "{{ admin_user }}"
+    group: "{{ admin_user }}"
+    mode: "0755"
+
+- name: Create logs folder
+  file:
+    path: "{{ logs_root }}"
+    state: directory
+    owner: "{{ admin_user }}"
+    group: "{{ admin_user }}"
+    mode: "0755"
 
 - name: Create shared docker network
   community.docker.docker_network:

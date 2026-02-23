@@ -1,14 +1,14 @@
 - name: Check if Portfolio is already running
   ansible.builtin.command:
     cmd: docker compose ps -q --status running
-    chdir: "{{ stacks_root }}/apps/portfolio"
+    chdir: "{{ apps_root }}/portfolio"
   register: portfolio_running
   changed_when: false
   failed_when: false
 
 - name: Create portfolio stack directory
   ansible.builtin.file:
-    path: "{{ stacks_root }}/apps/portfolio"
+    path: "{{ apps_root }}/portfolio"
     state: directory
     owner: "{{ admin_user }}"
     group: "{{ admin_user }}"
@@ -18,7 +18,7 @@
 - name: Clone portfolio repository
   ansible.builtin.git:
     repo: "{{ portfolio_repo }}"
-    dest: "{{ stacks_root }}/apps/portfolio/repo"
+    dest: "{{ apps_root }}/portfolio/repo"
     version: "{{ portfolio_branch }}"
     force: true
   register: portfolio_git
@@ -27,7 +27,7 @@
 - name: Render production docker-compose for portfolio
   ansible.builtin.template:
     src: docker-compose.yml.j2
-    dest: "{{ stacks_root }}/apps/portfolio/docker-compose.yml"
+    dest: "{{ apps_root }}/portfolio/docker-compose.yml"
     owner: "{{ admin_user }}"
     group: "{{ admin_user }}"
     mode: "0644"
@@ -35,14 +35,14 @@
 
 - name: Build and deploy portfolio stack
   community.docker.docker_compose_v2:
-    project_src: "{{ stacks_root }}/apps/portfolio"
+    project_src: "{{ apps_root }}/portfolio"
     state: present
     build: always
   when: portfolio_running.stdout | default('') | length == 0 and (portfolio_git.changed | default(false))
 
 - name: Ensure portfolio stack is running
   community.docker.docker_compose_v2:
-    project_src: "{{ stacks_root }}/apps/portfolio"
+    project_src: "{{ apps_root }}/portfolio"
     state: present
   when: portfolio_running.stdout | default('') | length == 0 and not (portfolio_git.changed | default(false))
 

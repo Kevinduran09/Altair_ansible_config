@@ -1,14 +1,14 @@
 - name: Check if n8n is already running
   ansible.builtin.command:
     cmd: docker compose ps -q --status running
-    chdir: "{{ stacks_root }}/apps/n8n"
+    chdir: "{{ apps_root }}/n8n"
   register: n8n_running
   changed_when: false
   failed_when: false
 
 - name: Create n8n stack directory
   ansible.builtin.file:
-    path: "{{ stacks_root }}/apps/n8n"
+    path: "{{ apps_root }}/n8n"
     state: directory
     owner: root
     group: root
@@ -18,7 +18,7 @@
 - name: Render n8n docker-compose.yml
   ansible.builtin.template:
     src: docker-compose.yml.j2
-    dest: "{{ stacks_root }}/apps/n8n/docker-compose.yml"
+    dest: "{{ apps_root }}/n8n/docker-compose.yml"
     owner: root
     group: root
     mode: "0644"
@@ -27,7 +27,7 @@
 - name: Render n8n .env (configuration)
   ansible.builtin.template:
     src: .env.j2
-    dest: "{{ stacks_root }}/apps/n8n/.env"
+    dest: "{{ apps_root }}/n8n/.env"
     owner: root
     group: root
     mode: "0600"
@@ -35,7 +35,7 @@
 
 - name: Deploy n8n stack
   community.docker.docker_compose_v2:
-    project_src: "{{ stacks_root }}/apps/n8n"
+    project_src: "{{ apps_root }}/n8n"
     state: present
     pull: missing
   when: n8n_running.stdout | default('') | length == 0
