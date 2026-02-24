@@ -1,4 +1,4 @@
-- name: Create stacks root
+- name: Crear directorio raiz de stacks
   file:
     path: "{{ stacks_root }}"
     state: directory
@@ -6,7 +6,7 @@
     group: "{{ admin_user }}"
     mode: "0755"
 
-- name: Create stacks folders
+- name: Crear carpetas de stacks
   file:
     path: "{{ stacks_root }}/{{ item }}"
     state: directory
@@ -19,8 +19,7 @@
     - tools
     - data-services
 
-
-- name: Create persistent data root
+- name: Crear directorio raiz de datos
   file:
     path: "{{ data_root }}"
     state: directory
@@ -28,7 +27,7 @@
     group: "{{ admin_user }}"
     mode: "0755"
 
-- name: Create persistent data folders
+- name: Crear carpetas de datos persistentes
   file:
     path: "{{ data_root }}/{{ item }}"
     state: directory
@@ -40,7 +39,7 @@
     - apps
     - shared
 
-- name: Create personal folder
+- name: Crear carpeta personal
   file:
     path: "{{ personal_root }}"
     state: directory
@@ -48,7 +47,7 @@
     group: "{{ admin_user }}"
     mode: "0755"
 
-- name: Create backups folder
+- name: Crear carpeta de backups
   file:
     path: "{{ backups_root }}"
     state: directory
@@ -56,7 +55,7 @@
     group: "{{ admin_user }}"
     mode: "0755"
 
-- name: Create scripts folder
+- name: Crear carpeta de scripts
   file:
     path: "{{ scripts_root }}"
     state: directory
@@ -64,7 +63,7 @@
     group: "{{ admin_user }}"
     mode: "0755"
 
-- name: Create config folder
+- name: Crear carpeta de configuracion
   file:
     path: "{{ config_root }}"
     state: directory
@@ -72,7 +71,7 @@
     group: "{{ admin_user }}"
     mode: "0755"
 
-- name: Create logs folder
+- name: Crear carpeta de logs
   file:
     path: "{{ logs_root }}"
     state: directory
@@ -80,7 +79,7 @@
     group: "{{ admin_user }}"
     mode: "0755"
 
-- name: Create shared docker network
+- name: Crear red docker compartida
   community.docker.docker_network:
     name: proxy
     state: present

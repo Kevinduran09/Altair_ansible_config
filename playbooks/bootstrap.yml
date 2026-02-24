@@ -1,14 +1,13 @@
-- name: Bootstrap ALTAIR config
+- name: Configuracion inicial de ALTAIR
   hosts: altair_sv
   become: true
   vars_files:
     - ../group_vars/all.yml
-    - ../group_vars/users.yml
 
   roles:
     - base
+    - docker
     - user-management
     - security
-    - docker
     - stacks
     - npm

@@ -1,17 +1,17 @@
-- name: Validate managed_users is defined
+- name: Verificar que managed_users este definido
   ansible.builtin.assert:
     that:
       - managed_users is defined
       - managed_users is sequence
     fail_msg: "Define managed_users en group_vars/users.yml"
 
-- name: Validate managed_users has unique usernames
+- name: Verificar que no haya usuarios duplicados
   ansible.builtin.assert:
     that:
       - (managed_users | map(attribute='username') | list | length) == (managed_users | map(attribute='username') | list | unique | length)
     fail_msg: "Hay usernames duplicados en managed_users"
 
-- name: Validate required fields for each managed user
+- name: Validar campos requeridos de cada usuario
   ansible.builtin.assert:
     that:
       - item.username is defined
@@ -20,11 +20,11 @@
     fail_msg: "Cada usuario debe tener username y state valido (present/absent)"
   loop: "{{ managed_users }}"
 
-- name: Get existing system users
+- name: Obtener usuarios del sistema
   ansible.builtin.getent:
     database: passwd
 
-- name: Ensure managed users are present
+- name: Crear usuarios definidos
   ansible.builtin.user:
     name: "{{ item.username }}"
     state: present
@@ -37,7 +37,7 @@
   loop: "{{ managed_users }}"
   when: (item.state | default('present')) == 'present'
 
-- name: Ensure managed users are absent
+- name: Eliminar usuarios marcados como absent
   ansible.builtin.user:
     name: "{{ item.username }}"
     state: absent
@@ -45,7 +45,7 @@
   loop: "{{ managed_users }}"
   when: (item.state | default('present')) == 'absent'
 
-- name: Ensure .ssh directory exists for users with keys
+- name: Crear directorio .ssh para usuarios con llaves
   ansible.builtin.file:
     path: "/home/{{ item.username }}/.ssh"
     state: directory
@@ -57,7 +57,7 @@
     - (item.state | default('present')) == 'present'
     - (item.ssh_public_keys | default([]) | length) > 0
 
-- name: Set authorized keys for managed users
+- name: Configurar llaves SSH autorizadas
   ansible.posix.authorized_key:
     user: "{{ item.0.username }}"
     key: "{{ item.1 }}"
@@ -66,7 +66,7 @@
   loop: "{{ query('subelements', managed_users, 'ssh_public_keys', {'skip_missing': True}) }}"
   when: (item.0.state | default('present')) == 'present'
 
-- name: Ensure sudoers for nopasswd users
+- name: Configurar sudoers sin password
   ansible.builtin.copy:
     dest: "/etc/sudoers.d/{{ item.username }}"
     content: "{{ item.username }} ALL=(ALL) NOPASSWD:ALL\n"
@@ -79,7 +79,7 @@
     - (item.state | default('present')) == 'present'
     - item.sudo_nopasswd | default(false)
 
-- name: Remove sudoers file when nopasswd is disabled or user absent
+- name: Eliminar sudoers si no aplica
   ansible.builtin.file:
     path: "/etc/sudoers.d/{{ item.username }}"
     state: absent
@@ -87,7 +87,7 @@
   when:
     - (item.state | default('present')) == 'absent' or not (item.sudo_nopasswd | default(false))
 
-- name: Report users that already existed
+- name: Reportar usuarios que ya existian
   ansible.builtin.debug:
     msg: "El usuario {{ item.username }} ya existia y fue validado/actualizado sin duplicar."
   loop: "{{ managed_users }}"
@@ -95,7 +95,7 @@
     - (item.state | default('present')) == 'present'
     - item.username in (ansible_facts.getent_passwd | default({}))
 
-- name: Remove users from explicit removal list (optional)
+- name: Eliminar usuarios de la lista de remocion
   ansible.builtin.user:
     name: "{{ item }}"
     state: absent

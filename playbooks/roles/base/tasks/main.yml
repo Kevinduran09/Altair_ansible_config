@@ -1,12 +1,12 @@
-- name: Update apt cache
+- name: Actualizar cache de apt
   apt:
     update_cache: yes
     cache_valid_time: 3600
-- name: Upgrade  packages
+- name: Actualizar paquetes del sistema
   apt:
     upgrade: dist
 
-- name: Install base packages
+- name: Instalar paquetes base
   apt:
     name:
       - curl
@@ -18,7 +18,7 @@
       - fail2ban
     state: present
 
-- name: Ensure time sync service
+- name: Instalar servicio de sincronizacion de hora
   apt:
     name: systemd-timesyncd
     state: present

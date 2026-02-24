@@ -1,21 +1,21 @@
-- name: Data services disabled - skipping
+- name: Data services deshabilitados
   ansible.builtin.debug:
     msg: "Data services están deshabilitados (data_services_enabled=false)."
   when: not (data_services_enabled | bool)
 
-- name: PostgreSQL disabled - skipping
+- name: PostgreSQL deshabilitado
   ansible.builtin.debug:
     msg: "PostgreSQL está deshabilitado (postgres_enabled=false)."
   when:
     - data_services_enabled | bool
     - not (postgres_enabled | bool)
 
-- name: Manage PostgreSQL data service
+- name: Gestionar PostgreSQL
   when:
     - data_services_enabled | bool
     - postgres_enabled | bool
   block:
-    - name: Ensure postgres stack directory exists
+    - name: Crear directorio del stack de postgres
       ansible.builtin.file:
         path: "{{ data_services_root }}/postgres"
         state: directory
@@ -23,7 +23,7 @@
         group: "{{ admin_user }}"
         mode: "0755"
 
-    - name: Ensure postgres data directory exists
+    - name: Crear directorio de datos de postgres
       ansible.builtin.file:
         path: "{{ postgres_data_dir }}"
         state: directory
@@ -31,7 +31,7 @@
         group: "{{ admin_user }}"
         mode: "0755"
 
-    - name: Render docker-compose for PostgreSQL
+    - name: Generar docker-compose de PostgreSQL
       ansible.builtin.template:
         src: docker-compose.postgres.yml.j2
         dest: "{{ data_services_root }}/postgres/docker-compose.yml"
@@ -39,7 +39,7 @@
         group: "{{ admin_user }}"
         mode: "0644"
 
-    - name: Ensure PostgreSQL stack is up
+    - name: Levantar stack de PostgreSQL
       community.docker.docker_compose_v2:
         project_src: "{{ data_services_root }}/postgres"
         state: present

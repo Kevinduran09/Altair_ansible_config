@@ -1,25 +1,25 @@
-- name: Install Docker pre
+- name: Instalar dependencias de Docker
   apt:
     name:
       - gnupg
       - lsb-release
     state: present
 
-- name: Add Docker GPG key
+- name: Agregar llave GPG de Docker
   apt_key:
     url: https://download.docker.com/linux/ubuntu/gpg
     state: present
 
-- name: Add Docker repository
+- name: Agregar repositorio de Docker
   apt_repository:
     repo: deb https://download.docker.com/linux/ubuntu focal stable
     state: present
 
-- name: Update apt cache after Docker repo
+- name: Actualizar cache de apt
   apt:
     update_cache: yes
 
-- name: Install Docker packages
+- name: Instalar paquetes de Docker
   apt:
     name:
       - docker-ce
@@ -29,17 +29,17 @@
       - docker-compose-plugin
     state: present
 
-- name: Enable docker service
+- name: Habilitar servicio de Docker
   systemd:
     name: docker
     enabled: yes
 
-- name: Start docker service
+- name: Iniciar servicio de Docker
   systemd:
     name: docker
     state: started
 
-- name: Add admin user to docker group
+- name: Agregar usuario admin al grupo docker
   user:
     name: "{{ admin_user }}"
     groups: docker

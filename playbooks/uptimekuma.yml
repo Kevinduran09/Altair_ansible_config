@@ -1,4 +1,4 @@
-- name: Bootstrap ALTAIR for Uptime Kuma
+- name: Desplegar Uptime Kuma en ALTAIR
   hosts: altair_sv
   become: true
   vars_files:

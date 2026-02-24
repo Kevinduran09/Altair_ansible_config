@@ -1,4 +1,4 @@
-- name: Create NPM directory
+- name: Crear directorio para NPM
   file:
     path: "{{ infra_root }}/nginx-proxy-manager"
     state: directory
@@ -6,7 +6,7 @@
     group: "{{ admin_user }}"
     mode: "0755"
 
-- name: Render docker-compose file for NPM
+- name: Generar docker-compose de NPM
   template:
     src: docker-compose.yml.j2
     dest: "{{ infra_root }}/nginx-proxy-manager/docker-compose.yml"
@@ -14,7 +14,7 @@
     group: "{{ admin_user }}"
     mode: "0644"
 
-- name: Ensure NPM up
+- name: Levantar stack de NPM
   community.docker.docker_compose_v2:
     project_src: "{{ infra_root }}/nginx-proxy-manager"
     state: present

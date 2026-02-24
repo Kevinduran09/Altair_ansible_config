@@ -1,61 +1,61 @@
-# ---- Firewall safe order: allow first, then enable deny ----
-- name: Allow SSH
+# ---- Firewall: primero permitir, luego denegar ----
+- name: Permitir SSH
   community.general.ufw:
     rule: allow
     port: "{{ ssh_port }}"
     proto: tcp
 
-- name: Allow HTTP
+- name: Permitir HTTP
   community.general.ufw:
     rule: allow
     port: "80"
     proto: tcp
 
-- name: Allow HTTPS
+- name: Permitir HTTPS
   community.general.ufw:
     rule: allow
     port: "443"
     proto: tcp
 
-- name: Enable ufw with deny incoming policy
+- name: Activar firewall con politica de denegar
   community.general.ufw:
     state: enabled
     policy: deny
 
-# ---- SSH hardening with config validation ----
-- name: Set SSH Port
+# ---- Hardening de SSH ----
+- name: Configurar puerto SSH
   ansible.builtin.lineinfile:
     path: /etc/ssh/sshd_config
     regexp: '^#?Port\s+'
     line: "Port {{ ssh_port }}"
     validate: "/usr/sbin/sshd -t -f %s"
-  notify: Restart ssh
+  notify: Reiniciar ssh
 
-- name: Disable root login
+- name: Deshabilitar login de root
   ansible.builtin.lineinfile:
     path: /etc/ssh/sshd_config
     regexp: '^#?PermitRootLogin\s+'
     line: "PermitRootLogin no"
     validate: "/usr/sbin/sshd -t -f %s"
-  notify: Restart ssh
+  notify: Reiniciar ssh
 
-- name: Disable password auth
+- name: Deshabilitar autenticacion por password
   ansible.builtin.lineinfile:
     path: /etc/ssh/sshd_config
     regexp: '^#?PasswordAuthentication\s+'
     line: "PasswordAuthentication no"
     validate: "/usr/sbin/sshd -t -f %s"
-  notify: Restart ssh
+  notify: Reiniciar ssh
 
-- name: Disable challenge-response auth
+- name: Deshabilitar challenge-response
   ansible.builtin.lineinfile:
     path: /etc/ssh/sshd_config
     regexp: '^#?ChallengeResponseAuthentication\s+'
     line: "ChallengeResponseAuthentication no"
     validate: "/usr/sbin/sshd -t -f %s"
-  notify: Restart ssh
+  notify: Reiniciar ssh
 
-- name: Ensure fail2ban enabled
+- name: Activar fail2ban
   ansible.builtin.service:
     name: fail2ban
     state: started
