@@ -1,46 +1,29 @@
-- name: Check if n8n is already running
-  ansible.builtin.command:
-    cmd: docker compose ps -q --status running
-    chdir: "{{ apps_root }}/n8n"
-  register: n8n_running
-  changed_when: false
-  failed_when: false
-
-- name: Create n8n stack directory
+- name: Crear directorio para n8n
   ansible.builtin.file:
     path: "{{ apps_root }}/n8n"
     state: directory
     owner: root
     group: root
     mode: "0755"
-  when: n8n_running.stdout | default('') | length == 0
 
-- name: Render n8n docker-compose.yml
+- name: Generar docker-compose de n8n
   ansible.builtin.template:
     src: docker-compose.yml.j2
     dest: "{{ apps_root }}/n8n/docker-compose.yml"
     owner: root
     group: root
     mode: "0644"
-  when: n8n_running.stdout | default('') | length == 0
 
-- name: Render n8n .env (configuration)
+- name: Generar archivo .env de n8n
   ansible.builtin.template:
     src: .env.j2
     dest: "{{ apps_root }}/n8n/.env"
     owner: root
     group: root
     mode: "0600"
-  when: n8n_running.stdout | default('') | length == 0
 
-- name: Deploy n8n stack
+- name: Levantar stack de n8n
   community.docker.docker_compose_v2:
     project_src: "{{ apps_root }}/n8n"
     state: present
     pull: missing
-  when: n8n_running.stdout | default('') | length == 0
-
-- name: n8n already running – skipping
-  ansible.builtin.debug:
-    msg: "n8n ya está corriendo, se omite la instalación."
-  when: n8n_running.stdout | default('') | length > 0

@@ -1,52 +1,37 @@
-- name: Check if Portfolio is already running
-  ansible.builtin.command:
-    cmd: docker compose ps -q --status running
-    chdir: "{{ apps_root }}/portfolio"
-  register: portfolio_running
-  changed_when: false
-  failed_when: false
-
-- name: Create portfolio stack directory
+- name: Crear directorio para portfolio
   ansible.builtin.file:
     path: "{{ apps_root }}/portfolio"
     state: directory
     owner: "{{ admin_user }}"
     group: "{{ admin_user }}"
     mode: "0755"
-  when: portfolio_running.stdout | default('') | length == 0
 
-- name: Clone portfolio repository
+- name: Clonar repositorio del portfolio
   ansible.builtin.git:
     repo: "{{ portfolio_repo }}"
     dest: "{{ apps_root }}/portfolio/repo"
     version: "{{ portfolio_branch }}"
     force: true
   register: portfolio_git
-  when: portfolio_running.stdout | default('') | length == 0
 
-- name: Render production docker-compose for portfolio
+- name: Generar docker-compose de portfolio
   ansible.builtin.template:
     src: docker-compose.yml.j2
     dest: "{{ apps_root }}/portfolio/docker-compose.yml"
     owner: "{{ admin_user }}"
     group: "{{ admin_user }}"
     mode: "0644"
-  when: portfolio_running.stdout | default('') | length == 0
+  register: portfolio_docker_compose
 
-- name: Build and deploy portfolio stack
+- name: Construir y desplegar portfolio si hubo cambios
   community.docker.docker_compose_v2:
     project_src: "{{ apps_root }}/portfolio"
     state: present
     build: always
-  when: portfolio_running.stdout | default('') | length == 0 and (portfolio_git.changed | default(false))
+  when: portfolio_git.changed or portfolio_docker_compose.changed
 
-- name: Ensure portfolio stack is running
+- name: Asegurar que portfolio esté corriendo
   community.docker.docker_compose_v2:
     project_src: "{{ apps_root }}/portfolio"
     state: present
-  when: portfolio_running.stdout | default('') | length == 0 and not (portfolio_git.changed | default(false))
-
-- name: Portfolio already running – skipping
-  ansible.builtin.debug:
-    msg: "Portfolio ya está corriendo, se omite la instalación."
-  when: portfolio_running.stdout | default('') | length > 0
+  when: not (portfolio_git.changed or portfolio_docker_compose.changed)

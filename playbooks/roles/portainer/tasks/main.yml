@@ -1,36 +1,25 @@
-- name: Check if Portainer is already running
-  ansible.builtin.command:
-    cmd: docker compose ps -q --status running
-    chdir: "{{ tools_root }}/portainer"
-  register: portainer_running
-  changed_when: false
-  failed_when: false
-
-- name: Create Portainer folders
+- name: Crear directorio para Portainer
   file:
     path: "{{ tools_root }}/portainer"
     state: directory
     owner: "{{ admin_user }}"
     group: "{{ admin_user }}"
     mode: "0755"
-  when: portainer_running.stdout | default('') | length == 0
 
-- name: Copy Docker compose file for Portainer
+- name: Generar docker-compose de Portainer
   template:
     src: docker-compose.yml.j2
     dest: "{{ tools_root }}/portainer/docker-compose.yml"
     owner: "{{ admin_user }}"
     group: "{{ admin_user }}"
     mode: "0644"
-  when: portainer_running.stdout | default('') | length == 0
 
-- name: Ensure Portainer up
+- name: Levantar stack de Portainer
   community.docker.docker_compose_v2:
     project_src: "{{ tools_root }}/portainer"
     state: present
-  when: portainer_running.stdout | default('') | length == 0
 
-- name: Check Portainer from Docker proxy network
+- name: Verificar Portainer en la red proxy
   command: >
     docker run --rm --network proxy curlimages/curl:8.5.0
     -fsSI http://portainer:9000
@@ -39,9 +28,3 @@
   delay: 5
   until: portainer_check.rc == 0
   changed_when: false
-  when: portainer_running.stdout | default('') | length == 0
-
-- name: Portainer already running – skipping
-  ansible.builtin.debug:
-    msg: "Portainer ya está corriendo, se omite la instalación."
-  when: portainer_running.stdout | default('') | length > 0
