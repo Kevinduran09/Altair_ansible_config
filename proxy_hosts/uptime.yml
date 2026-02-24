@@ -1,6 +1,6 @@
 - domain_names:
-    - uptime-kduranet.duckdns.org
-  forward_host: "{{ proxy_forward_host }}"
+    - uptime.{{ domain_name }}
+  forward_host: "uptime-kuma"
   forward_port: 3001
   forward_scheme: http
   caching_enabled: false
@@ -12,6 +12,7 @@
   hsts_subdomains: false
   enabled: true
   meta:
+    name: "uptime"
     letsencrypt_agree: true
     dns_challenge: false
     onlyTailScale: true

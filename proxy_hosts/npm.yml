@@ -1,7 +1,7 @@
 - domain_names:
-    - npm-kduranet.duckdns.org
-  forward_host: "{{ proxy_forward_host }}"
-  forward_port: 81
+    - npm.{{ domain_name }}
+  forward_host: "nginx-proxy-manager"
+  forward_port: "{{ npm_admin_port }}"
   forward_scheme: http
   caching_enabled: false
   block_exploits: false
@@ -12,6 +12,7 @@
   hsts_subdomains: false
   enabled: true
   meta:
+    name: "npm"
     letsencrypt_agree: true
     dns_challenge: false
     onlyTailScale: true

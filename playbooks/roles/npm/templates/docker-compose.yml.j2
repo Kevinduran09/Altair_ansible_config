@@ -10,14 +10,10 @@ services:
     environment:
       DISABLE_IPV6: "true"
     volumes:
-      - npm_data:/data
-      - npm_letsencrypt:/etc/letsencrypt
+      - {{ npm_data_dir }}:/data
+      - {{ npm_letsencrypt_dir }}:/etc/letsencrypt
     networks:
       - proxy
-
-volumes:
-  npm_data:
-  npm_letsencrypt:
 
 networks:
   proxy:

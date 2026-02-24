@@ -1,0 +1,3 @@
+.vault_pass
+ansible.cfg
+inventory/hosts.ini

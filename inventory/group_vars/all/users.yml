@@ -1,5 +1,3 @@
-admin_user_ssh_pubkey: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHAZ0CLm+/vpRD4tpwAR/ubsbTAloBxeb1BPrCNProUP upcloud-vps"
-
 managed_users:
   - username: "{{ admin_user }}"
     state: present
@@ -12,7 +10,6 @@ managed_users:
     sudo_nopasswd: true
     ssh_public_keys:
       - "{{ admin_user_ssh_pubkey }}"
-
 
 protected_users:
   - root

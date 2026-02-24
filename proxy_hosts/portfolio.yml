@@ -1,6 +1,6 @@
 - domain_names:
-    - portfolio-kduranet.duckdns.org
-  forward_host: "{{ proxy_forward_host }}"
+    - portfolio.{{ domain_name }}
+  forward_host: "portfolio-kevinduran"
   forward_port: 80
   forward_scheme: http
   caching_enabled: false
@@ -12,6 +12,7 @@
   hsts_subdomains: false
   enabled: true
   meta:
+    name: "portfolio"
     letsencrypt_agree: true
     dns_challenge: false
   advanced_config: ""

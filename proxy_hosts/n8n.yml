@@ -1,7 +1,7 @@
 - domain_names:
-    - n8n-kduranet.duckdns.org
-  forward_host: "{{ proxy_forward_host }}"
-  forward_port: 5678
+    - n8n.{{ domain_name }}
+  forward_host: "n8n"
+  forward_port: "{{ n8n_port}}"
   forward_scheme: http
   caching_enabled: false
   block_exploits: false
@@ -12,6 +12,7 @@
   hsts_subdomains: false
   enabled: true
   meta:
+    name: "n8n"
     letsencrypt_agree: true
     dns_challenge: false
   advanced_config: ""

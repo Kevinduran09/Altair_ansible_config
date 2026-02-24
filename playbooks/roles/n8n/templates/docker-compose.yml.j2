@@ -5,24 +5,21 @@ services:
     restart: unless-stopped
     environment:
       - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
-      - N8N_HOST=n8n-kduranet.duckdns.org
+      - N8N_HOST=n8n.kevoduran.com
       - N8N_PORT=5678
       - N8N_PROTOCOL=https
       - NODE_ENV=production
-      - WEBHOOK_URL=https://n8n-kduranet.duckdns.org/
+      - WEBHOOK_URL=https://n8n.kevoduran.com/
       - GENERIC_TIMEZONE=America/Costa_Rica
       - TZ=America/Costa_Rica
       - N8N_TRUST_PROXY=true
     volumes:
-      - n8n_data:/home/node/.n8n
+      - {{ n8n_data_dir }}:/home/node/.n8n
       - ./local-files:/files
     expose:
       - "5678"
     networks:
       - proxy
-
-volumes:
-  n8n_data:
 
 networks:
   proxy:
