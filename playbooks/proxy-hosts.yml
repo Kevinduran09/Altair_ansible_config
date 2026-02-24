@@ -1,0 +1,8 @@
+- name: Gestionar proxy hosts en ALTAIR
+  hosts: altair_sv
+  become: true
+  vars_files:
+    - ../group_vars/all.yml
+
+  roles:
+    - proxy-hosts

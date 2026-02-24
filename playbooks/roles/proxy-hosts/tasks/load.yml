@@ -1,0 +1,56 @@
+---
+# ── Cargar y validar definiciones de proxy hosts ──
+
+- name: "load | Buscar archivos en {{ proxy_hosts_dir }}"
+  ansible.builtin.set_fact:
+    _proxy_host_files: "{{ lookup('fileglob', proxy_hosts_dir ~ '/*.yml', wantlist=true) | sort }}"
+
+- name: "load | Verificar que hay archivos"
+  ansible.builtin.assert:
+    that: _proxy_host_files | length > 0
+    fail_msg: "No se encontraron archivos YAML en '{{ proxy_hosts_dir }}'"
+
+- name: "load | Leer y cargar cada archivo"
+  ansible.builtin.set_fact:
+    _raw_proxy_hosts: >-
+      {{ (_raw_proxy_hosts | default([])) +
+         (lookup('ansible.builtin.template', item) | from_yaml) }}
+  loop: "{{ _proxy_host_files }}"
+  loop_control:
+    label: "{{ item | basename }}"
+
+- name: "load | Normalizar cada host con los defaults"
+  ansible.builtin.set_fact:
+    proxy_hosts: >-
+      {{
+        proxy_hosts | default([]) + [
+          proxy_host_defaults | combine(item) | combine({
+            'forward_port': (item.forward_port | int),
+            'meta': item.meta | default({})
+          })
+        ]
+      }}
+  loop: "{{ _raw_proxy_hosts }}"
+  loop_control:
+    label: "{{ item.meta.name | default('sin-nombre') }}"
+
+- name: "load | Validar campos requeridos"
+  ansible.builtin.assert:
+    that:
+      - item.domain_names is defined and item.domain_names | length > 0
+      - item.forward_host is defined and item.forward_host | length > 0
+      - item.forward_port | int > 0 and item.forward_port | int < 65536
+      - item.meta.name is defined and item.meta.name | length > 0
+    fail_msg: "Host '{{ item.meta.name | default('DESCONOCIDO') }}' inválido. Revisar domain_names, forward_host, forward_port y meta.name."
+  loop: "{{ proxy_hosts }}"
+  loop_control:
+    label: "{{ item.meta.name | default('DESCONOCIDO') }}"
+
+- name: "load | Verificar que no haya nombres duplicados"
+  ansible.builtin.assert:
+    that: (proxy_hosts | map(attribute='meta.name') | map('lower') | list | length) == (proxy_hosts | map(attribute='meta.name') | map('lower') | list | unique | length)
+    fail_msg: "Hay nombres de proxy host duplicados"
+
+- name: "load | Mostrar hosts cargados"
+  ansible.builtin.debug:
+    msg: "Hosts cargados: {{ proxy_hosts | map(attribute='meta.name') | list }}"

@@ -1,0 +1,44 @@
+---
+# ── Aplicar certificados SSL a los proxy hosts ──
+
+- name: "apply_ssl | Asignar certificado SSL a cada host"
+  ansible.builtin.uri:
+    url: "{{ npm_base_url }}:{{ npm_admin_port }}/api/nginx/proxy-hosts/{{ _remote.id }}"
+    method: PUT
+    headers:
+      Authorization: "Bearer {{ npm_token }}"
+    body_format: json
+    body:
+      domain_names: "{{ _remote.domain_names }}"
+      forward_scheme: "{{ _remote.forward_scheme }}"
+      forward_host: "{{ _remote.forward_host }}"
+      forward_port: "{{ _remote.forward_port | int }}"
+      caching_enabled: "{{ _remote.caching_enabled | default(false) | bool }}"
+      block_exploits: "{{ _remote.block_exploits | default(true) | bool }}"
+      allow_websocket_upgrade: "{{ _remote.allow_websocket_upgrade | default(false) | bool }}"
+      certificate_id: "{{ _cert_id | int }}"
+      ssl_forced: "{{ item.ssl_forced | default(true) | bool }}"
+      http2_support: "{{ item.http2_support | default(true) | bool }}"
+      hsts_enabled: "{{ item.hsts_enabled | default(true) | bool }}"
+      hsts_subdomains: "{{ item.hsts_subdomains | default(false) | bool }}"
+      enabled: "{{ _remote.enabled | default(true) | bool }}"
+      advanced_config: "{{ _remote.advanced_config | default('') }}"
+      locations: "{{ _remote.locations | default([]) }}"
+      meta: "{{ _remote.meta | default({}) }}"
+    status_code: 200
+    return_content: true
+  loop: "{{ proxy_hosts }}"
+  loop_control:
+    label: "{{ item.meta.name }} (cert_id={{ _cert_id }})"
+  vars:
+    _key: "{{ item.domain_names | sort | join(',') | lower }}"
+    _remote: "{{ _remote_by_domains[_key] | default({}) }}"
+    _cert_id: "{{ _certs_by_domains_final[_key].id | default(0) }}"
+  when:
+    - _key in _remote_by_domains
+    - _key in _certs_by_domains_final
+    - >-
+      (_remote.certificate_id | default(0) | int) != (_cert_id | int) or
+      (_remote.ssl_forced | default(false) | bool) != (item.ssl_forced | default(true) | bool) or
+      (_remote.http2_support | default(false) | bool) != (item.http2_support | default(true) | bool) or
+      (_remote.hsts_enabled | default(false) | bool) != (item.hsts_enabled | default(true) | bool)

@@ -1,0 +1,27 @@
+---
+# ── Autenticarse en la API de NPM ──
+
+- name: "auth | Verificar que las credenciales existan"
+  ansible.builtin.assert:
+    that:
+      - npm_identity is defined and npm_identity | length > 0
+      - npm_secret is defined and npm_secret | length > 0
+    fail_msg: "npm_identity y npm_secret deben estar definidos (usar vault)"
+
+- name: "auth | Obtener token de acceso"
+  ansible.builtin.uri:
+    url: "{{ npm_base_url }}:{{ npm_admin_port }}/api/tokens"
+    method: POST
+    body_format: json
+    body:
+      identity: "{{ npm_identity }}"
+      secret: "{{ npm_secret }}"
+    status_code: 200
+    return_content: true
+  register: _npm_login
+  no_log: true
+
+- name: "auth | Guardar token"
+  ansible.builtin.set_fact:
+    npm_token: "{{ _npm_login.json.token }}"
+  no_log: true

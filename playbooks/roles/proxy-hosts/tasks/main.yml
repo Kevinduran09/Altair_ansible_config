@@ -1,0 +1,20 @@
+---
+# ── Rol proxy-hosts: gestionar proxy hosts y SSL en NPM ──
+
+- name: "proxy-hosts | 1. Cargar y validar definiciones de hosts"
+  ansible.builtin.include_tasks: load.yml
+
+- name: "proxy-hosts | 2. Autenticarse en NPM"
+  ansible.builtin.include_tasks: auth.yml
+
+- name: "proxy-hosts | 3. Crear o actualizar proxy hosts"
+  ansible.builtin.include_tasks: hosts.yml
+
+- name: "proxy-hosts | 4. Gestionar certificados SSL"
+  ansible.builtin.include_tasks: certs.yml
+
+- name: "proxy-hosts | 5. Aplicar SSL a los hosts"
+  ansible.builtin.include_tasks: apply_ssl.yml
+
+- name: "proxy-hosts | 6. Mostrar resumen"
+  ansible.builtin.include_tasks: report.yml

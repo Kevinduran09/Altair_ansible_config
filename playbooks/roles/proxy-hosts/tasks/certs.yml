@@ -1,0 +1,96 @@
+---
+# ── Gestión de certificados Let's Encrypt en NPM ──
+# HTTP-01: meta = { dns_challenge: false }. NPM usa el email del admin.
+# DNS-01: meta incluye dns_provider y credenciales.
+
+- name: "certs | Obtener certificados actuales"
+  ansible.builtin.uri:
+    url: "{{ npm_base_url }}:{{ npm_admin_port }}/api/nginx/certificates"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ npm_token }}"
+    status_code: 200
+    return_content: true
+  register: _npm_certs_raw
+
+- name: "certs | Indexar certificados por dominio"
+  ansible.builtin.set_fact:
+    _certs_by_domains: >-
+      {{ _certs_by_domains | default({}) | combine({
+           (item.domain_names | sort | join(',') | lower): item
+         }) }}
+  loop: "{{ _npm_certs_raw.json.data | default(_npm_certs_raw.json | default([])) }}"
+  loop_control:
+    label: "{{ item.domain_names | default([]) | join(', ') }}"
+  when: item.domain_names is defined
+
+- name: "certs | Inicializar mapa de certificados"
+  ansible.builtin.set_fact:
+    _certs_by_domains: "{{ _certs_by_domains | default({}) }}"
+
+- name: "certs | Crear certificados que faltan"
+  ansible.builtin.uri:
+    url: "{{ npm_base_url }}:{{ npm_admin_port }}/api/nginx/certificates"
+    method: POST
+    headers:
+      Authorization: "Bearer {{ npm_token }}"
+    body_format: json
+    body:
+      domain_names: "{{ item.domain_names }}"
+      provider: "letsencrypt"
+      meta: >-
+        {{
+          { 'dns_challenge': true,
+            'dns_provider': item.meta.dns_provider | default(''),
+            'dns_provider_credentials': item.meta.dns_provider_credentials | default(''),
+            'propagation_seconds': item.meta.propagation_seconds | default(30) | int
+          } if (item.meta.dns_challenge | default(false) | bool)
+          else { 'dns_challenge': false }
+        }}
+    status_code: [200, 201]
+    return_content: true
+    timeout: 120
+  loop: "{{ proxy_hosts }}"
+  loop_control:
+    label: "{{ item.meta.name }}"
+  register: _created_certs
+  when: (item.domain_names | sort | join(',') | lower) not in _certs_by_domains
+  failed_when: false
+
+- name: "certs | Verificar que se crearon correctamente"
+  ansible.builtin.fail:
+    msg: >-
+      No se pudo crear cert para '{{ item.item.meta.name }}'
+      ({{ item.item.domain_names | join(', ') }}).
+      Error: {{ item.json.error.message | default(item.content | default('sin detalle')) }}
+  loop: "{{ _created_certs.results | default([]) }}"
+  loop_control:
+    label: "{{ item.item.meta.name | default('?') }}"
+  when:
+    - item.status is defined
+    - item.status not in [200, 201]
+
+- name: "certs | Refrescar certificados desde NPM"
+  ansible.builtin.uri:
+    url: "{{ npm_base_url }}:{{ npm_admin_port }}/api/nginx/certificates"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ npm_token }}"
+    status_code: 200
+    return_content: true
+  register: _npm_certs_raw
+
+- name: "certs | Reindexar certificados por dominio"
+  ansible.builtin.set_fact:
+    _certs_by_domains_final: >-
+      {{ _certs_by_domains_final | default({}) | combine({
+           (item.domain_names | sort | join(',') | lower): item
+         }) }}
+  loop: "{{ _npm_certs_raw.json.data | default(_npm_certs_raw.json | default([])) }}"
+  loop_control:
+    label: "{{ item.domain_names | default([]) | join(', ') }}"
+  when: item.domain_names is defined
+
+- name: "certs | Inicializar mapa final de certificados"
+  ansible.builtin.set_fact:
+    _certs_by_domains_final: "{{ _certs_by_domains_final | default(_certs_by_domains) }}"

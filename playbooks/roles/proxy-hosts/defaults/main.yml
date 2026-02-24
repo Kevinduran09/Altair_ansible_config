@@ -1,0 +1,17 @@
+# ── Nginx Proxy Manager API ──────────────────────────────────────────
+npm_base_url: "http://127.0.0.1"
+npm_admin_port: 81
+
+# ── Defaults por proxy host (se aplican si el YAML no los define) ──
+proxy_host_defaults:
+  forward_scheme: "http"
+  caching_enabled: false
+  block_exploits: true
+  allow_websocket_upgrade: false
+  ssl_forced: true
+  http2_support: true
+  hsts_enabled: true
+  hsts_subdomains: false
+  enabled: true
+  advanced_config: ""
+  locations: []
