@@ -1,6 +1,7 @@
 - name: Desplegar Uptime Kuma en ALTAIR
-  hosts: altair_sv
+  hosts: servers
   become: true
+  remote_user: "{{ ssh_login_user }}"
   vars_files:
     - ../group_vars/all.yml
 

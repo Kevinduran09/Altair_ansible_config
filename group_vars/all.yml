@@ -1,8 +1,16 @@
 # usernames
 admin_user: "kduran"
+ssh_login_user: "{{ admin_user }}"
 
 # SSH
 ssh_port: 22
+
+# Bootstrap strategy
+bootstrap_mode: "managed"
+bootstrap_init_user: "root"
+
+# Server identity
+server_hostname: "kumadev"
 
 # Stacks
 srv_root: /srv

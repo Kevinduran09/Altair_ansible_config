@@ -1,3 +1,7 @@
+- name: Configurar hostname del servidor
+  hostname:
+    name: "{{ server_hostname }}"
+
 - name: Actualizar cache de apt
   apt:
     update_cache: yes

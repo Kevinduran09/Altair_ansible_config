@@ -1,0 +1,9 @@
+netdata_release_channel: stable
+
+netdata_port: 19999
+netdata_bind_to: "127.0.0.1" # fuerza acceso por túnel SSH / reverse proxy local
+netdata_kickstart_path: "/tmp/netdata-kickstart.sh"
+
+ufw_manage: true
+ufw_allow_netdata: false # por defecto NO abrir 19999
+netdata_allow_ip: "" # si algún día quieres permitir tu IP pública

@@ -1,11 +1,11 @@
-- name: Configuracion base del servidor (modo managed)
+- name: Bootstrap inicial del servidor virgen (modo init)
   hosts: servers
   become: true
-  remote_user: "{{ ssh_login_user }}"
   vars_files:
     - ../group_vars/all.yml
   vars:
-    bootstrap_mode: managed
+    bootstrap_mode: init
+  remote_user: "{{ bootstrap_init_user }}"
 
   roles:
     - base

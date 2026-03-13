@@ -1,11 +1,19 @@
 - name: Desplegar aplicaciones en ALTAIR
-  hosts: altair_sv
+  hosts: servers
   become: true
+  remote_user: "{{ ssh_login_user }}"
   vars_files:
     - ../group_vars/all.yml
   roles:
-    - uptime-kuma
-    - portfolio
-    - portainer
-    - n8n
-    - npm
+    - role: uptime-kuma
+      tags: uptime-kuma
+    - role: portfolio
+      tags: portfolio
+    - role: portainer
+      tags: portainer
+    - role: n8n
+      tags: n8n
+    - role: npm
+      tags: npm
+    - role: netdata
+      tags: netdata
