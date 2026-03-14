@@ -1,0 +1,64 @@
+name: Discord Notify (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      event:
+        required: true
+        type: string
+      project:
+        required: true
+        type: string
+      run_url:
+        required: true
+        type: string
+      tag:
+        required: false
+        type: string
+        default: "n/a"
+      status:
+        required: false
+        type: string
+        default: "info"
+      pr_url:
+        required: false
+        type: string
+        default: ""
+      actor:
+        required: false
+        type: string
+        default: "github-actions[bot]"
+      environment:
+        required: false
+        type: string
+        default: "altair"
+      extra:
+        required: false
+        type: string
+        default: ""
+    secrets:
+      discord_webhook_url:
+        required: true
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Notify Discord
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.discord_webhook_url }}
+        run: |
+          chmod +x scripts/discord-notify.sh
+          scripts/discord-notify.sh \
+            --event "${{ inputs.event }}" \
+            --project "${{ inputs.project }}" \
+            --run-url "${{ inputs.run_url }}" \
+            --tag "${{ inputs.tag }}" \
+            --status "${{ inputs.status }}" \
+            --pr-url "${{ inputs.pr_url }}" \
+            --actor "${{ inputs.actor }}" \
+            --environment "${{ inputs.environment }}" \
+            --extra "${{ inputs.extra }}"

@@ -1,23 +1,19 @@
 - name: Crear directorio para Portainer
-  file:
-    path: "{{ tools_root }}/portainer"
+  ansible.builtin.file:
+    path: "{{ apps.portainer.deploy_dir }}"
     state: directory
     owner: "{{ admin_user }}"
     group: "{{ admin_user }}"
     mode: "0755"
 
-- name: Generar docker-compose de Portainer
-  template:
-    src: docker-compose.yml.j2
-    dest: "{{ tools_root }}/portainer/docker-compose.yml"
-    owner: "{{ admin_user }}"
-    group: "{{ admin_user }}"
-    mode: "0644"
-
-- name: Levantar stack de Portainer
-  community.docker.docker_compose_v2:
-    project_src: "{{ tools_root }}/portainer"
-    state: present
+- name: Desplegar stack de Portainer
+  ansible.builtin.include_tasks: "{{ playbook_dir }}/tasks/compose-deploy.yml"
+  vars:
+    compose_project_dir: "{{ apps.portainer.deploy_dir }}"
+    compose_template_src: "{{ role_path }}/templates/docker-compose.yml.j2"
+    compose_owner: "{{ admin_user }}"
+    compose_group: "{{ admin_user }}"
+    compose_pull_policy: missing
 
 - name: Verificar Portainer en la red proxy
   command: >

@@ -1,0 +1,11 @@
+# Data services (disabled by default)
+data_services_enabled: false
+
+# PostgreSQL (minimal stack; enable explicitly when needed)
+postgres_enabled: false
+postgres_image: "postgres:16"
+postgres_container_name: "postgres-main"
+postgres_db: "app"
+postgres_user: "app"
+postgres_password: "{{ vault_postgres_password }}"
+postgres_data_dir: "{{ db_data_root }}/postgres"

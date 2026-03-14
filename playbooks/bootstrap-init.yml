@@ -3,6 +3,10 @@
   become: true
   vars_files:
     - ../group_vars/all.yml
+    - ../group_vars/paths.yml
+    - ../group_vars/apps.yml
+    - ../group_vars/network.yml
+    - ../group_vars/data-services.yml
   vars:
     bootstrap_mode: init
   remote_user: "{{ bootstrap_init_user }}"

@@ -1,7 +1,7 @@
 services:
   npm:
-    image: jc21/nginx-proxy-manager:latest
-    container_name: nginx-proxy-manager
+    image: {{ apps.npm.image_repo }}:{{ apps.npm.image_tag }}
+    container_name: {{ apps.npm.container_name }}
     restart: unless-stopped
     ports:
       - "{{ npm_http_port }}:80"

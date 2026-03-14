@@ -1,9 +1,7 @@
 services:
   portfolio:
-    build:
-      context: ./repo
-      dockerfile: Dockerfile
-    container_name: portfolio-kevinduran
+    image: "{{ apps.portfolio.image_repo }}:{{ apps.portfolio.image_tag }}"
+    container_name: {{ apps.portfolio.container_name }}
     restart: unless-stopped
     mem_limit: 128m
     cpus: 0.5

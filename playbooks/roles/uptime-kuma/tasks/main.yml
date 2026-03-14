@@ -1,23 +1,19 @@
 - name: Crear directorio para Uptime Kuma
-  file:
-    path: "{{ stacks_root }}/tools/uptime-kuma"
+  ansible.builtin.file:
+    path: "{{ apps.uptime_kuma.deploy_dir }}"
     state: directory
     owner: "{{ admin_user }}"
     group: "{{ admin_user }}"
     mode: "0755"
 
-- name: Generar docker-compose de Uptime Kuma
-  template:
-    src: docker-compose.yml.j2
-    dest: "{{ stacks_root }}/tools/uptime-kuma/docker-compose.yml"
-    owner: "{{ admin_user }}"
-    group: "{{ admin_user }}"
-    mode: "0644"
-
-- name: Levantar stack de Uptime Kuma
-  community.docker.docker_compose_v2:
-    project_src: "{{ stacks_root }}/tools/uptime-kuma"
-    state: present
+- name: Desplegar stack de Uptime Kuma
+  ansible.builtin.include_tasks: "{{ playbook_dir }}/tasks/compose-deploy.yml"
+  vars:
+    compose_project_dir: "{{ apps.uptime_kuma.deploy_dir }}"
+    compose_template_src: "{{ role_path }}/templates/docker-compose.yml.j2"
+    compose_owner: "{{ admin_user }}"
+    compose_group: "{{ admin_user }}"
+    compose_pull_policy: missing
 
 - name: Verificar Uptime Kuma en la red proxy
   command: >

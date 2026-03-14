@@ -1,0 +1,38 @@
+---
+- name: compose-deploy | Validar variables requeridas
+  ansible.builtin.assert:
+    that:
+      - compose_project_dir is defined
+      - compose_template_src is defined
+    fail_msg: "compose_project_dir y compose_template_src son obligatorios"
+
+- name: compose-deploy | Crear directorio del proyecto
+  ansible.builtin.file:
+    path: "{{ compose_project_dir }}"
+    state: directory
+    owner: "{{ compose_owner | default(admin_user) }}"
+    group: "{{ compose_group | default(admin_user) }}"
+    mode: "{{ compose_dir_mode | default('0755') }}"
+
+- name: compose-deploy | Generar docker-compose
+  ansible.builtin.template:
+    src: "{{ compose_template_src }}"
+    dest: "{{ compose_project_dir }}/docker-compose.yml"
+    owner: "{{ compose_owner | default(admin_user) }}"
+    group: "{{ compose_group | default(admin_user) }}"
+    mode: "{{ compose_file_mode | default('0644') }}"
+
+- name: compose-deploy | Generar archivo .env opcional
+  ansible.builtin.template:
+    src: "{{ compose_env_template_src }}"
+    dest: "{{ compose_project_dir }}/.env"
+    owner: "{{ compose_env_owner | default(compose_owner | default(admin_user)) }}"
+    group: "{{ compose_env_group | default(compose_group | default(admin_user)) }}"
+    mode: "{{ compose_env_mode | default('0600') }}"
+  when: compose_env_template_src is defined
+
+- name: compose-deploy | Levantar stack
+  community.docker.docker_compose_v2:
+    project_src: "{{ compose_project_dir }}"
+    state: present
+    pull: "{{ compose_pull_policy | default('missing') }}"

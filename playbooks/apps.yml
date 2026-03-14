@@ -4,6 +4,10 @@
   remote_user: "{{ ssh_login_user }}"
   vars_files:
     - ../group_vars/all.yml
+    - ../group_vars/paths.yml
+    - ../group_vars/apps.yml
+    - ../group_vars/network.yml
+    - ../group_vars/data-services.yml
   roles:
     - role: uptime-kuma
       tags: uptime-kuma

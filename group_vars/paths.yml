@@ -1,0 +1,24 @@
+# Base paths
+srv_root: /srv
+stacks_root: "{{ srv_root }}/stacks"
+
+# Stack categories
+apps_root: "{{ stacks_root }}/apps"
+tools_root: "{{ stacks_root }}/tools"
+infra_root: "{{ stacks_root }}/infra"
+data_services_root: "{{ stacks_root }}/data-services"
+# Backward compatibility alias
+data_service_root: "{{ data_services_root }}"
+
+# Persistent volumes/data
+data_root: "{{ srv_root }}/data"
+db_data_root: "{{ data_root }}/databases"
+app_data_root: "{{ data_root }}/apps"
+shared_data_root: "{{ data_root }}/shared"
+
+# Operations and personal directories
+backups_root: "{{ srv_root }}/backups"
+logs_root: "{{ srv_root }}/logs"
+scripts_root: "{{ srv_root }}/scripts"
+personal_root: "{{ srv_root }}/personal"
+config_root: "{{ srv_root }}/config"

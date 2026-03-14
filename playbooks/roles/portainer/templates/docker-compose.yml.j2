@@ -1,7 +1,7 @@
 services:
   portainer:
-    image: portainer/portainer-ce:latest
-    container_name: portainer
+    image: {{ apps.portainer.image_repo }}:{{ apps.portainer.image_tag }}
+    container_name: {{ apps.portainer.container_name }}
     restart: unless-stopped
     ports:
       - "9000:9000"
@@ -14,4 +14,3 @@ services:
 networks:
   proxy:
     external: true
-

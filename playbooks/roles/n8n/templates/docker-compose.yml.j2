@@ -1,7 +1,7 @@
 services:
   n8n:
-    image: docker.n8n.io/n8nio/n8n:latest
-    container_name: n8n
+    image: {{ apps.n8n.image_repo }}:{{ apps.n8n.image_tag }}
+    container_name: {{ apps.n8n.container_name }}
     restart: unless-stopped
     environment:
       - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true

@@ -1,0 +1,12 @@
+# Nginx Proxy Manager
+npm_base_url: "http://127.0.0.1"
+npm_http_port: 80
+npm_https_port: 443
+npm_admin_port: 81
+
+# Contact
+admin_email: "kevinduran.net.123@gmail.com"
+
+# Proxy host directory
+project_root: "{{ playbook_dir }}/.."
+proxy_hosts_dir: "{{ project_root }}/proxy_hosts"

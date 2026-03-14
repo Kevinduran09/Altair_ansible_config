@@ -1,37 +1,8 @@
-- name: Crear directorio para portfolio
-  ansible.builtin.file:
-    path: "{{ apps_root }}/portfolio"
-    state: directory
-    owner: "{{ admin_user }}"
-    group: "{{ admin_user }}"
-    mode: "0755"
-
-- name: Clonar repositorio del portfolio
-  ansible.builtin.git:
-    repo: "{{ portfolio_repo }}"
-    dest: "{{ apps_root }}/portfolio/repo"
-    version: "{{ portfolio_branch }}"
-    force: true
-  register: portfolio_git
-
-- name: Generar docker-compose de portfolio
-  ansible.builtin.template:
-    src: docker-compose.yml.j2
-    dest: "{{ apps_root }}/portfolio/docker-compose.yml"
-    owner: "{{ admin_user }}"
-    group: "{{ admin_user }}"
-    mode: "0644"
-  register: portfolio_docker_compose
-
-- name: Construir y desplegar portfolio si hubo cambios
-  community.docker.docker_compose_v2:
-    project_src: "{{ apps_root }}/portfolio"
-    state: present
-    build: always
-  when: portfolio_git.changed or portfolio_docker_compose.changed
-
-- name: Asegurar que portfolio esté corriendo
-  community.docker.docker_compose_v2:
-    project_src: "{{ apps_root }}/portfolio"
-    state: present
-  when: not (portfolio_git.changed or portfolio_docker_compose.changed)
+- name: Desplegar stack de portfolio
+  ansible.builtin.include_tasks: "{{ playbook_dir }}/tasks/compose-deploy.yml"
+  vars:
+    compose_project_dir: "{{ apps.portfolio.deploy_dir }}"
+    compose_template_src: "{{ role_path }}/templates/docker-compose.yml.j2"
+    compose_owner: "{{ admin_user }}"
+    compose_group: "{{ admin_user }}"
+    compose_pull_policy: always

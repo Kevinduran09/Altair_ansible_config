@@ -1,8 +1,6 @@
-# usernames
+# Core identity and access
 admin_user: "kduran"
 ssh_login_user: "{{ admin_user }}"
-
-# SSH
 ssh_port: 22
 
 # Bootstrap strategy
@@ -11,64 +9,3 @@ bootstrap_init_user: "root"
 
 # Server identity
 server_hostname: "kumadev"
-
-# Stacks
-srv_root: /srv
-stacks_root: "{{ srv_root }}/stacks"
-
-# Stacks Categories
-apps_root: "{{ stacks_root }}/apps"
-tools_root: "{{ stacks_root }}/tools"
-infra_root: "{{ stacks_root }}/infra"
-data_services_root: "{{ stacks_root }}/data-services"
-# Backward compatibility alias
-data_service_root: "{{ data_services_root }}"
-
-# Persistent volumes/data
-data_root: "{{ srv_root }}/data"
-db_data_root: "{{ data_root }}/databases"
-app_data_root: "{{ data_root }}/apps"
-shared_data_root: "{{ data_root }}/shared"
-
-# Operations and personal diretories
-backups_root: "{{ srv_root }}/backups"
-logs_root: "{{ srv_root }}/logs"
-scripts_root: "{{ srv_root }}/scripts"
-personal_root: "{{ srv_root }}/personal"
-config_root: "{{ srv_root }}/config"
-
-# Data services (disabled by default)
-data_services_enabled: false
-uptime_kuma_data_dir: "{{ app_data_root }}/uptime-kuma"
-n8n_data_dir: "{{ app_data_root }}/n8n"
-portainer_data_dir: "{{ app_data_root }}/portainer"
-npm_data_dir: "{{ app_data_root }}/npm"
-npm_letsencrypt_dir: "{{ app_data_root }}/npm/letsencrypt"
-# PostgreSQL (minimal stack; enable explicitly when needed)
-postgres_enabled: false
-postgres_image: "postgres:16"
-postgres_container_name: "postgres-main"
-postgres_db: "app"
-postgres_user: "app"
-postgres_password: "123456789"
-postgres_data_dir: "{{ db_data_root }}/postgres"
-
-# Nginx Proxy Manager
-npm_base_url: "http://127.0.0.1"
-npm_http_port: 80
-npm_https_port: 443
-npm_admin_port: 81
-
-# Email
-admin_email: "kevinduran.net.123@gmail.com"
-
-# n8n Variables
-n8n_port: 5678
-
-# Portfolio
-portfolio_repo: "https://github.com/Kevinduran09/porfolio-kevinduran.git"
-portfolio_branch: "main"
-
-# proxy host directory
-project_root: "{{ playbook_dir }}/.."
-proxy_hosts_dir: "{{ project_root }}/proxy_hosts"
