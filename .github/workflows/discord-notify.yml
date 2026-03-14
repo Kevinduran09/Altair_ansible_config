@@ -44,15 +44,19 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout notification scripts repository
         uses: actions/checkout@v4
+        with:
+          repository: Kevinduran09/Altair_ansible_config
+          ref: main
+          path: infra_notify
 
       - name: Notify Discord
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.discord_webhook_url }}
         run: |
-          chmod +x scripts/discord-notify.sh
-          scripts/discord-notify.sh \
+          chmod +x infra_notify/scripts/discord-notify.sh
+          infra_notify/scripts/discord-notify.sh \
             --event "${{ inputs.event }}" \
             --project "${{ inputs.project }}" \
             --run-url "${{ inputs.run_url }}" \
