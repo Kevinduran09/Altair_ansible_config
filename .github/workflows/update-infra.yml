@@ -125,6 +125,7 @@ jobs:
             playbooks/apps.yml \
             -i inventory/hosts.yml \
             --vault-password-file .vault_pass \
+            -e "ssh_private_key_file=/home/runner/.ssh/id_ed25519" \
             -vv
 
   notify_succeeded:
