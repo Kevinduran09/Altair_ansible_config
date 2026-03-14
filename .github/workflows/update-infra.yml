@@ -103,9 +103,23 @@ jobs:
           chmod 600 .vault_pass
 
       - name: Configure SSH key
+        env:
+          ANSIBLE_SSH_PRIVATE_KEY: ${{ secrets.ANSIBLE_SSH_PRIVATE_KEY }}
         run: |
           mkdir -p ~/.ssh
-          printf '%s' "${{ secrets.ANSIBLE_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          python - <<'PY'
+          import os
+          from pathlib import Path
+
+          key = os.environ.get("ANSIBLE_SSH_PRIVATE_KEY", "")
+          key = key.replace("\r\n", "\n").replace("\r", "\n")
+          if "\\n" in key and "BEGIN" in key:
+              key = key.replace("\\n", "\n")
+          if key and not key.endswith("\n"):
+              key += "\n"
+
+          Path("/home/runner/.ssh/id_ed25519").write_text(key, encoding="utf-8")
+          PY
           chmod 600 ~/.ssh/id_ed25519
 
       - name: Configure known_hosts (optional)
