@@ -119,7 +119,13 @@ jobs:
       - name: Run deploy script
         run: |
           chmod +x scripts/deploy-app.sh
-          scripts/deploy-app.sh "${{ needs.resolve.outputs.app }}" target playbooks/apps.yml -vv
+          scripts/deploy-app.sh \
+            "${{ needs.resolve.outputs.app }}" \
+            target \
+            playbooks/apps.yml \
+            -i inventory/hosts.yml \
+            --vault-password-file .vault_pass \
+            -vv
 
   notify_succeeded:
     if: ${{ needs.deploy.result == 'success' }}

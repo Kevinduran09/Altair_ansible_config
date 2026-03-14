@@ -93,7 +93,13 @@ jobs:
       - name: Run deploy script
         run: |
           chmod +x scripts/deploy-app.sh
-          scripts/deploy-app.sh "${{ inputs.app }}" "${{ inputs.limit }}" "${{ inputs.playbook }}" -vv
+          scripts/deploy-app.sh \
+            "${{ inputs.app }}" \
+            "${{ inputs.limit }}" \
+            "${{ inputs.playbook }}" \
+            -i inventory/hosts.yml \
+            --vault-password-file .vault_pass \
+            -vv
 
   notify_succeeded:
     if: ${{ needs.deploy.result == 'success' }}
