@@ -1,0 +1,8 @@
+- name: Bootstrap inicial de backup configuracion
+  hosts: servers
+  become: true
+  remote_user: "{{ ssh_login_user }}"
+
+  roles:
+    - role: backup-tools
+      tags: backup-tools

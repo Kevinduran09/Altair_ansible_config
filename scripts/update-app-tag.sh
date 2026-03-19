@@ -4,7 +4,7 @@ set -euo pipefail
 
 usage() {
   printf 'Uso: %s <app> <sha|tag> [archivo]\n' "$0"
-  printf 'Ejemplo: %s portfolio a1b2c3d4e5f6 group_vars/apps.yml\n' "$0"
+  printf 'Ejemplo: %s portfolio a1b2c3d4e5f6 inventory/group_vars/all/apps.yml\n' "$0"
 }
 
 if [[ ${1:-} == "-h" || ${1:-} == "--help" ]]; then
@@ -19,7 +19,7 @@ fi
 
 app_name="$1"
 input_tag="$2"
-target_file="${3:-group_vars/apps.yml}"
+target_file="${3:-inventory/group_vars/all/apps.yml}"
 
 if [[ ! -f "$target_file" ]]; then
   printf 'ERROR archivo no existe: %s\n' "$target_file" >&2

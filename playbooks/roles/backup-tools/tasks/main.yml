@@ -1,0 +1,28 @@
+- name: Correr rol de copias de seguridad
+  when: backup_enabled | bool
+  block:
+    - name: Incluir install tasks
+      ansible.builtin.include_tasks: install.yml
+
+    - name: Incluir config tasks
+      ansible.builtin.include_tasks: config.yml
+
+    - name: Incluir systemd tasks
+      ansible.builtin.include_tasks: systemd.yml
+
+- name: Verificar si existe la unidad timer de backup
+  when: not (backup_enabled | bool)
+  ansible.builtin.stat:
+    path: "/etc/systemd/system/{{ backup_systemd_unit_name }}.timer"
+  register: backup_timer_unit_file
+
+- name: Deshabilitar timer de backup cuando backup_enabled es false
+  when:
+    - not (backup_enabled | bool)
+    - backup_timer_unit_file is defined
+    - backup_timer_unit_file.stat.exists
+  ansible.builtin.systemd:
+    name: "{{ backup_systemd_unit_name }}.timer"
+    enabled: false
+    state: stopped
+    daemon_reload: true

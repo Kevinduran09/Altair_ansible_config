@@ -1,0 +1,45 @@
+- name: Validar variables obligatorias para Restic + R2
+  ansible.builtin.assert:
+    that:
+      - (vault_restic_password | default('') | trim | length) > 0
+      - (vault_backup_aws_access_key_id | default('') | trim | length) > 0
+      - (vault_backup_aws_secret_access_key | default('') | trim | length) > 0
+      - backup_restic_repository is match("^s3:https://.+")
+      - "'<' not in backup_restic_repository"
+    fail_msg: >-
+      Faltan variables de backup o backup_restic_repository no tiene formato s3:https://... para Cloudflare R2.
+
+- name: Escribir archivo de contraseña de restic
+  ansible.builtin.copy:
+    dest: "{{ backup_restic_password_file }}"
+    content: "{{ vault_restic_password }}\n"
+    owner: "{{ backup_user }}"
+    group: "{{ backup_group }}"
+    mode: "0600"
+  no_log: true
+
+- name: Escribir archivo env de restic
+  ansible.builtin.template:
+    src: restic.env.j2
+    dest: "{{ backup_env_dir }}/restic.env"
+    owner: "{{ backup_user }}"
+    group: "{{ backup_group }}"
+    mode: "0600"
+  no_log: true
+
+- name: Renderizar script de backup
+  ansible.builtin.template:
+    src: backup-run.sh.j2
+    dest: "{{ backup_scripts_dir }}/backup-run.sh"
+    owner: "{{ backup_user }}"
+    group: "{{ backup_group }}"
+    mode: "0750"
+
+- name: Instalar mini CLI de restic
+  ansible.builtin.template:
+    src: restic-cli.sh.j2
+    dest: "{{ backup_cli_install_path }}"
+    owner: root
+    group: root
+    mode: "0755"
+  when: backup_cli_enabled | bool

@@ -1,0 +1,22 @@
+---
+- name: Instalar paquetes de backup
+  ansible.builtin.package:
+    name:
+      - restic
+    state: present
+
+- name: Crear estructura de directorios
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ backup_user }}"
+    group: "{{ backup_group }}"
+    mode: "0755"
+  loop:
+    - "{{ backup_config_dir }}"
+    - "{{ backup_apps_config_dir }}"
+    - "{{ backup_backup_config_dir }}"
+    - "{{ backup_scripts_dir }}"
+    - "{{ backup_logs_dir }}"
+    - "{{ backup_metadata_dir }}"
+    - "{{ backup_env_dir }}"

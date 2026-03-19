@@ -3,7 +3,7 @@
     that:
       - managed_users is defined
       - managed_users is sequence
-    fail_msg: "Define managed_users en group_vars/users.yml"
+    fail_msg: "Define managed_users en inventory/group_vars/all/users.yml"
 
 - name: Verificar que no haya usuarios duplicados
   ansible.builtin.assert:

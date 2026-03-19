@@ -1,0 +1,15 @@
+[Unit]
+Description=Altair Restic backup job
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User={{ backup_user }}
+Group={{ backup_group }}
+EnvironmentFile={{ backup_env_dir }}/restic.env
+ExecStart={{ backup_scripts_dir }}/backup-run.sh
+
+
+[Install]
+WantedBy=multi-user.target

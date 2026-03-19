@@ -4,7 +4,7 @@ set -euo pipefail
 
 usage() {
   printf 'Uso: %s <app> <sha|tag> [base_branch] [archivo]\n' "$0"
-  printf 'Ejemplo: %s portfolio a1b2c3d4e5f6 main group_vars/apps.yml\n' "$0"
+  printf 'Ejemplo: %s portfolio a1b2c3d4e5f6 main inventory/group_vars/all/apps.yml\n' "$0"
 }
 
 if [[ ${1:-} == "-h" || ${1:-} == "--help" ]]; then
@@ -20,7 +20,7 @@ fi
 app_name="$1"
 input_tag="$2"
 base_branch="${3:-main}"
-target_file="${4:-group_vars/apps.yml}"
+target_file="${4:-inventory/group_vars/all/apps.yml}"
 
 if [[ "$input_tag" == sha-* ]]; then
   deploy_tag="$input_tag"

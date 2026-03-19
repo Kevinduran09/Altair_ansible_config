@@ -1,0 +1,14 @@
+backup_enabled: true
+
+backup_restic_repository: "s3:https://63d40405a3ee61d712afed2a4e733d1f.r2.cloudflarestorage.com/infra-bucket/restic-repo"
+backup_aws_default_region: "auto"
+
+backup_paths:
+  - /srv/data
+  - /srv/stacks
+  - /srv/config/apps
+
+backup_excludes:
+  - /srv/config/backup
+  - /srv/logs
+  - /srv/backups

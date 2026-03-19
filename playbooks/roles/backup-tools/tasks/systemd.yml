@@ -1,0 +1,31 @@
+---
+- name: Render backup service
+  ansible.builtin.template:
+    src: infra-backup.service.j2
+    dest: "/etc/systemd/system/{{ backup_systemd_unit_name }}.service"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload systemd
+
+- name: Render backup timer
+  ansible.builtin.template:
+    src: infra-backup.timer.j2
+    dest: "/etc/systemd/system/{{ backup_systemd_unit_name }}.timer"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload systemd
+
+- name: Enable and start backup timer
+  ansible.builtin.systemd:
+    name: "{{ backup_systemd_unit_name }}.timer"
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Ejecutar backup inmediato tras el deploy (opcional)
+  ansible.builtin.systemd:
+    name: "{{ backup_systemd_unit_name }}.service"
+    state: started
+  when: backup_run_after_deploy | bool

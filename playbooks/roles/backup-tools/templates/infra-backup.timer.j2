@@ -1,0 +1,12 @@
+[Unit]
+Description=Run Altair backup on schedule
+
+[Timer]
+OnCalendar={{ backup_timer_on_calendar }}
+RandomizedDelaySec={{ backup_timer_randomized_delay }}
+Persistent={{ backup_timer_persistent | ternary('true', 'false') }}
+Unit={{ backup_systemd_unit_name }}.service
+
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,151 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+ENV_FILE="{{ backup_env_dir }}/restic.env"
+METADATA_FILE="{{ backup_metadata_dir }}/latest.json"
+SERVICE_NAME="{{ backup_systemd_unit_name }}.service"
+TIMER_NAME="{{ backup_systemd_unit_name }}.timer"
+
+usage() {
+  cat <<'EOF'
+Uso: restic-cli <comando> [args]
+
+Comandos:
+  snapshots [args...]       Lista snapshots
+  latest                    Muestra el snapshot mas reciente
+  ls [snapshot] [path]      Lista contenido (default snapshot=latest)
+  restore <path> <target>   Restaura una ruta del snapshot latest
+  check [args...]           Ejecuta restic check
+  run                       Ejecuta backup via systemd service
+  logs [n]                  Muestra logs del service (default n=80)
+  status                    Muestra estado de service y timer
+  metadata                  Muestra metadata JSON del ultimo backup
+  env                       Muestra variables RESTIC_* activas
+  raw <args...>             Pasa args directos a restic
+
+Ejemplos:
+  restic-cli snapshots
+  restic-cli ls latest /srv/data
+  restic-cli restore /srv/data /tmp/restore
+  restic-cli raw stats --mode raw-data latest
+EOF
+}
+
+require_root() {
+  if [[ $EUID -ne 0 ]]; then
+    exec sudo "$0" "$@"
+  fi
+}
+
+load_env() {
+  if [[ ! -r "$ENV_FILE" ]]; then
+    printf 'ERROR no se puede leer env file: %s\n' "$ENV_FILE" >&2
+    exit 2
+  fi
+
+  set -a
+  # shellcheck disable=SC1090
+  source "$ENV_FILE"
+  set +a
+
+  if [[ -z "${RESTIC_REPOSITORY:-}" ]]; then
+    printf 'ERROR RESTIC_REPOSITORY no esta definido\n' >&2
+    exit 3
+  fi
+}
+
+show_metadata() {
+  if [[ ! -f "$METADATA_FILE" ]]; then
+    printf 'ERROR metadata no existe: %s\n' "$METADATA_FILE" >&2
+    exit 4
+  fi
+  python3 -m json.tool "$METADATA_FILE"
+}
+
+if [[ ${1:-} == "-h" || ${1:-} == "--help" || $# -eq 0 ]]; then
+  usage
+  exit 0
+fi
+
+cmd="$1"
+shift || true
+
+case "$cmd" in
+  snapshots)
+    require_root "$cmd" "$@"
+    load_env
+    restic snapshots "$@"
+    ;;
+  latest)
+    require_root "$cmd" "$@"
+    load_env
+    restic snapshots --latest 1 "$@"
+    ;;
+  ls)
+    require_root "$cmd" "$@"
+    load_env
+    snapshot="${1:-latest}"
+    path_filter="${2:-}"
+    if [[ -n "$path_filter" ]]; then
+      restic ls "$snapshot" --path "$path_filter"
+    else
+      restic ls "$snapshot"
+    fi
+    ;;
+  restore)
+    require_root "$cmd" "$@"
+    load_env
+    if [[ $# -lt 2 ]]; then
+      printf 'ERROR uso: restic-cli restore <path> <target>\n' >&2
+      exit 5
+    fi
+    restore_path="$1"
+    restore_target="$2"
+    restic restore latest --target "$restore_target" --include "$restore_path"
+    ;;
+  check)
+    require_root "$cmd" "$@"
+    load_env
+    restic check "$@"
+    ;;
+  run)
+    require_root "$cmd" "$@"
+    systemctl start "$SERVICE_NAME"
+    journalctl -u "$SERVICE_NAME" -n 80 --no-pager
+    ;;
+  logs)
+    require_root "$cmd" "$@"
+    lines="${1:-80}"
+    journalctl -u "$SERVICE_NAME" -n "$lines" --no-pager
+    ;;
+  status)
+    require_root "$cmd" "$@"
+    systemctl status "$TIMER_NAME" --no-pager || true
+    systemctl status "$SERVICE_NAME" --no-pager || true
+    systemctl list-timers --all "$TIMER_NAME" --no-pager
+    ;;
+  metadata)
+    require_root "$cmd" "$@"
+    show_metadata
+    ;;
+  env)
+    require_root "$cmd" "$@"
+    load_env
+    env | grep -E '^(RESTIC_|AWS_)'
+    ;;
+  raw)
+    require_root "$cmd" "$@"
+    load_env
+    if [[ $# -lt 1 ]]; then
+      printf 'ERROR uso: restic-cli raw <args...>\n' >&2
+      exit 6
+    fi
+    restic "$@"
+    ;;
+  *)
+    printf 'ERROR comando desconocido: %s\n\n' "$cmd" >&2
+    usage
+    exit 1
+    ;;
+esac

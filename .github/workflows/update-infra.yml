@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - group_vars/apps.yml
+      - inventory/group_vars/all/apps.yml
   workflow_dispatch:
     inputs:
       app:
@@ -49,7 +49,7 @@ jobs:
           if [[ -n "$TAG_INPUT" ]]; then
             TAG="$TAG_INPUT"
           elif [[ "$APP" == "portfolio" ]]; then
-            TAG="$(awk '/^  portfolio:/{f=1;next} /^  [a-zA-Z0-9_]+:/{if(f)exit} f && /image_tag:/{gsub(/"/,"",$2); print $2; exit}' group_vars/apps.yml)"
+            TAG="$(awk '/^  portfolio:/{f=1;next} /^  [a-zA-Z0-9_]+:/{if(f)exit} f && /image_tag:/{gsub(/"/,"",$2); print $2; exit}' inventory/group_vars/all/apps.yml)"
           else
             TAG="n/a"
           fi

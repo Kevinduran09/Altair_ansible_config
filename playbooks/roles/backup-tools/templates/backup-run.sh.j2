@@ -1,0 +1,222 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+export RESTIC_REPOSITORY="{{ backup_restic_repository }}"
+export RESTIC_PASSWORD_FILE="{{ backup_restic_password_file }}"
+
+LOG_DIR="{{ backup_logs_dir }}"
+METADATA_DIR="{{ backup_metadata_dir }}"
+STAMP="$(date +%Y-%m-%d_%H-%M-%S)"
+LOG_FILE="${LOG_DIR}/backup-${STAMP}.log"
+METADATA_FILE="${METADATA_DIR}/latest.json"
+METADATA_HISTORY_FILE="${METADATA_DIR}/history/backup-${STAMP}.json"
+HOST_NAME="$(hostname)"
+RUN_ID="${STAMP}-${HOST_NAME}"
+
+
+
+mkdir -p "$LOG_DIR"
+mkdir -p "$METADATA_DIR"
+mkdir -p "$METADATA_DIR/history"
+touch "$LOG_FILE"
+
+
+log_info() {
+  local msg="$*"
+  echo "[INFO] $(date -Iseconds) $msg" | tee -a "$LOG_FILE" >&2
+}
+
+log_error() {
+  local msg="$*"
+  echo "[ERROR] $(date -Iseconds) $msg" | tee -a "$LOG_FILE" >&2
+}
+
+write_metadata() {
+  local status="$1"
+  local stage="$2"
+  local started_at="$3"
+  local finished_at="$4"
+  local duration="$5"
+  local exit_code="$6"
+  local snapshot_id="${7:-}"
+  local error_msg="${8:-}"
+  local error_json="null"
+
+  if [[ -n "$error_msg" ]]; then
+    error_json=$(printf '%s' "$error_msg" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')
+  fi
+
+
+
+  cat > "$METADATA_FILE" <<EOF
+    {
+  "run_id": "$RUN_ID",
+  "status": "$status",
+  "stage": "$stage",
+  "started_at": "$started_at",
+  "finished_at": "$finished_at",
+  "duration_seconds": $duration,
+  "exit_code": $exit_code,
+  "hostname": "$HOST_NAME",
+  "repository": "$RESTIC_REPOSITORY",
+  "snapshot_id": "${snapshot_id:-}",
+  "backup_paths": {{ backup_paths | tojson }},
+  "excludes": {{ backup_excludes | tojson }},
+  "log_file": "$LOG_FILE",
+  "error_message": $error_json
+}
+EOF
+  cp "$METADATA_FILE" "$METADATA_HISTORY_FILE"
+  log_info "Metadata escrita en $METADATA_FILE"
+  log_info "Historico de Metadata escrito en $METADATA_HISTORY_FILE"
+
+}
+
+check_repository() {
+  log_info "Verificando repositorio restic"
+  
+  local output
+  if output=$(restic snapshots --json 2>&1); then
+    log_info "Repositorio accesible y verificado correctamente"
+    return 0
+  fi
+
+  echo "$output" >> "$LOG_FILE"
+
+  if echo "$output" | grep -qi "Is there a repository at the following location"; then
+    log_info "Repositorio no inicializado, inicializando..."
+    if restic init 2>&1 | tee -a "$LOG_FILE"; then
+      log_info "Repositorio inicializado correctamente"
+      return 0
+    else
+      log_error "Error al inicializar repositorio"
+      return 1
+    fi
+  fi
+
+  log_error "No se pudo acceder al repositorio. Verifica credenciales y conectividad con R2."
+  return 1
+}
+
+run_backup() {
+  log_info "Ejecutando snapshot de backup"
+
+  local -a cmd
+  cmd=(restic backup --json)
+
+
+  {% for path in backup_paths %}
+  cmd+=("{{ path }}")
+  {% endfor %}
+
+  {% for item in backup_excludes %}
+  cmd+=("--exclude" "{{ item }}")
+  {% endfor %}
+
+  local output
+  if output="$("${cmd[@]}" 2>&1)"; then
+    echo "$output" >> "$LOG_FILE"
+    log_info "Snapshot creado exitosamente"
+
+    local snapshot_id
+
+    snapshot_id=$(printf '%s\n' "$output" | grep -oP '"snapshot_id"\s*:\s*"\K[a-f0-9]+' | head -1 || true)
+
+    if [[ -z "$snapshot_id" ]]; then
+      snapshot_id=$(restic snapshots --latest 1 --json 2>/dev/null | grep -oP '"id"\s*:\s*"\K[a-f0-9]+' | head -1 || true)
+    fi
+
+    if [[ -z "$snapshot_id" ]]; then
+      snapshot_id="unknown"
+    fi
+
+    echo "$snapshot_id"
+  else
+    log_error "Error al ejecutar backup: $output"
+    return 1
+  fi
+
+}
+
+run_retention_policy() {
+  log_info "Aplicando política de retención"
+
+  if restic forget --prune \
+    --keep-daily {{ backup_keep_daily }} \
+    --keep-weekly {{ backup_keep_weekly }} \
+    --keep-monthly {{ backup_keep_monthly }} \
+    2>&1 | tee -a "$LOG_FILE"; then
+    log_info "Política de retención aplicada correctamente"
+  else
+    log_error "Error al aplicar política de retención"
+    return 1
+  fi
+}
+
+main() {
+  local started_at finished_at duration snapshot_id
+  local started_epoch finished_epoch
+  local stage="init"
+  local exit_code=0
+  local error_message=""
+
+  started_at="$(date -Iseconds)"
+  started_epoch="$(date +%s)"
+
+  log_info "========================================="
+  log_info "INICIO DE BACKUP - Host: $HOSTNAME"
+  log_info "========================================="
+  log_info "Repositorio: $RESTIC_REPOSITORY"
+  log_info "Rutas a respaldar: {{ backup_paths | join(', ') }}"
+  log_info "Exclusiones: {{ backup_excludes | join(', ') }}"
+  
+  stage="check_repository"
+  if ! check_repository; then
+    exit_code=1
+    error_message="Error en verificación o inicialización del repositorio"
+    finished_at="$(date -Iseconds)"
+    finished_epoch="$(date +%s)"
+    duration=$((finished_epoch - started_epoch))
+    write_metadata "error" "$stage" "$started_at" "$finished_at" "$duration" "$exit_code" "" "$error_message"
+    exit "$exit_code"
+  fi
+
+
+  stage="run_backup"
+  if ! snapshot_id="$(run_backup)"; then
+    exit_code=1
+    error_message="Error al ejecutar snapshot"
+    finished_at="$(date -Iseconds)"
+    finished_epoch="$(date +%s)"
+    duration=$((finished_epoch - started_epoch))
+    write_metadata "error" "$stage" "$started_at" "$finished_at" "$duration" "$exit_code" "" "$error_message"
+    exit "$exit_code"
+  fi
+
+  stage="run_retention_policy"
+  if ! run_retention_policy; then
+    exit_code=1
+    error_message="Error al aplicar política de retención"
+    finished_at="$(date -Iseconds)"
+    finished_epoch="$(date +%s)"
+    duration=$((finished_epoch - started_epoch))
+    write_metadata "error" "$stage" "$started_at" "$finished_at" "$duration" "$exit_code" "$snapshot_id" "$error_message"
+    exit "$exit_code"
+  fi
+
+  stage="completed"
+  finished_at="$(date -Iseconds)"
+  finished_epoch="$(date +%s)"
+  duration=$((finished_epoch - started_epoch))
+
+  write_metadata "success" "$stage" "$started_at" "$finished_at" "$duration" "0" "$snapshot_id" ""
+
+  log_info "========================================="
+  log_info "BACKUP COMPLETADO - Snapshot: $snapshot_id"
+  log_info "Duración: ${duration} segundos"
+  log_info "========================================="
+
+  exit 0
+}
+
+main "$@"
