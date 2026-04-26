@@ -13,7 +13,7 @@ apps:
   portfolio:
     deploy_dir: "{{ apps_root }}/portfolio"
     image_repo: "ghcr.io/kevinduran09/porfolio-kevinduran"
-    image_tag: "sha-3e93ea2bff4bb59c76f93918dd2ef3bdd68cdb94"
+    image_tag: "sha-e26d3ec32d2133b74d12276a997a854f572199f8"
     container_name: "portfolio-kevinduran"
   n8n:
     deploy_dir: "{{ apps_root }}/n8n"
