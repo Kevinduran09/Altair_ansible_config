@@ -1,0 +1,10 @@
+services:
+  smoke:
+    image: nginx:1.28-alpine
+    environment:
+      TEST_LITERAL: 'ci$$not#real:password'
+    healthcheck:
+      test: [CMD-SHELL, "wget -q -O /dev/null http://127.0.0.1/"]
+      interval: 2s
+      timeout: 2s
+      retries: 15

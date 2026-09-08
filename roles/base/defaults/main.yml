@@ -1,0 +1,4 @@
+---
+base_upgrade_packages: false
+base_timezone: America/Costa_Rica
+base_packages: [curl, ca-certificates, git, unzip, htop, ufw, fail2ban, python3, python3-requests]

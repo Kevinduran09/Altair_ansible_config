@@ -1,17 +1,8 @@
-- name: Desplegar aplicaciones en ALTAIR
+---
+- name: Deploy Altair applications
   hosts: servers
   become: true
   remote_user: "{{ ssh_login_user }}"
   roles:
-    - role: uptime-kuma
-      tags: uptime-kuma
-    - role: portfolio
-      tags: portfolio
-    - role: portainer
-      tags: portainer
-    - role: n8n
-      tags: n8n
-    - role: npm
-      tags: npm
-    - role: netdata
-      tags: netdata
+    - role: apps
+      tags: apps

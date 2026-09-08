@@ -1,0 +1,41 @@
+---
+backup_enabled: true
+
+backup_user: root
+backup_group: root
+
+backup_config_dir: "{{ config_root }}"
+backup_apps_config_dir: "{{ config_root }}/apps"
+backup_backup_config_dir: "{{ config_root }}/backup"
+backup_scripts_dir: "{{ scripts_root }}"
+backup_logs_dir: "{{ backups_root }}/logs"
+backup_metadata_dir: "{{ backups_root }}/metadata"
+backup_env_dir: "{{ backups_root }}/env"
+backup_paths:
+  - "{{ data_root }}"
+  - "{{ stacks_root }}"
+  - "{{ config_root }}/apps"
+
+backup_excludes:
+  - "{{ config_root }}/backup"
+  - "{{ logs_root }}"
+  - "{{ backups_root }}"
+
+backup_restic_repository: "s3:https://<R2_ACCOUNT_ID>.r2.cloudflarestorage.com/<R2_BUCKET>/restic-repo"
+backup_restic_password_file: "{{ backup_backup_config_dir }}/restic-password.txt"
+
+backup_aws_default_region: "auto"
+
+backup_systemd_unit_name: "infra-backup"
+
+backup_keep_daily: 2
+backup_keep_weekly: 4
+backup_keep_monthly: 5
+
+backup_timer_on_calendar: "*-*-* 02:15:00"
+backup_timer_randomized_delay: "10m"
+backup_timer_persistent: true
+backup_run_after_deploy: false
+
+backup_cli_enabled: true
+backup_cli_install_path: "/usr/local/bin/restic-cli"

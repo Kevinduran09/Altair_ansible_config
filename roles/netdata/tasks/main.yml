@@ -1,0 +1,56 @@
+- name: Ensure required packages are present
+  become: true
+  ansible.builtin.apt:
+    name:
+      - curl
+      - ca-certificates
+    update_cache: true
+
+- name: Download Netdata kickstart script
+  become: true
+  ansible.builtin.get_url:
+    url: "https://get.netdata.cloud/kickstart.sh"
+    dest: "{{ netdata_kickstart_path }}"
+    mode: "0755"
+
+# Idempotencia: si netdata ya está instalado, no re-ejecutar
+- name: Check if netdata is already installed
+  become: true
+  ansible.builtin.stat:
+    path: /usr/sbin/netdata
+  register: netdata_bin
+
+- name: Install Netdata (kickstart)
+  become: true
+  ansible.builtin.command: >
+    {{ netdata_kickstart_path }}
+    --non-interactive
+    --release-channel {{ netdata_release_channel }}
+  args:
+    creates: /usr/sbin/netdata
+  when: not netdata_bin.stat.exists
+
+- name: Ensure netdata service is enabled and started
+  become: true
+  ansible.builtin.systemd_service:
+    name: netdata
+    enabled: true
+    state: started
+
+# Config para bind a 127.0.0.1 (y otros ajustes mínimos)
+- name: Deploy netdata.conf
+  become: true
+  ansible.builtin.template:
+    src: netdata.conf.j2
+    dest: /etc/netdata/netdata.conf
+    mode: "0644"
+  notify: Restart netdata
+
+- name: Optionally allow Netdata port only from a specific IP
+  become: true
+  community.general.ufw:
+    rule: allow
+    port: "{{ netdata_port }}"
+    proto: tcp
+    from_ip: "{{ netdata_allow_ip }}"
+  when: netdata_manage_firewall and netdata_allow_port and (netdata_allow_ip | length > 0)

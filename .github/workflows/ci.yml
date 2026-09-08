@@ -1,0 +1,41 @@
+---
+name: Ansible CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  validate:
+    name: Validate Ansible and Compose
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-ansible
+      - name: Lint, test and render without production secrets
+        run: scripts/check.sh
+      - name: Validate rendered Compose files
+        run: |
+          for file in .ansible/rendered/*/docker-compose.yml; do
+            docker compose -f "$file" config --quiet
+          done
+      - name: Validate GitHub Actions workflows
+        run: docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint:1.7.7 -color
+      - name: Exercise shared role and verify second-run idempotence
+        run: |
+          ansible-playbook -i localhost, tests/compose-smoke.yml
+          actual="$(docker compose -f .ansible/smoke/docker-compose.yml exec -T smoke printenv TEST_LITERAL)"
+          test "$actual" = "ci\$not#real:password"
+          ansible-playbook -i localhost, tests/compose-smoke.yml | tee "$RUNNER_TEMP/compose-second-run.log"
+          grep -Eq 'changed=0 .*unreachable=0 .*failed=0' "$RUNNER_TEMP/compose-second-run.log"
+      - name: Remove disposable test stack
+        if: always()
+        run: |
+          if [[ -f .ansible/smoke/docker-compose.yml ]]; then
+            docker compose -f .ansible/smoke/docker-compose.yml down --volumes
+          fi

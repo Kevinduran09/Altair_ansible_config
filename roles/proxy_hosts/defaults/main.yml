@@ -1,0 +1,14 @@
+# ── Nginx Proxy Manager API ──────────────────────────────────────────
+# ── Defaults por proxy host (se aplican si el YAML no los define) ──
+proxy_hosts_defaults:
+  forward_scheme: "http"
+  caching_enabled: false
+  block_exploits: true
+  allow_websocket_upgrade: false
+  ssl_forced: true
+  http2_support: true
+  hsts_enabled: true
+  hsts_subdomains: false
+  enabled: true
+  advanced_config: ""
+  locations: []

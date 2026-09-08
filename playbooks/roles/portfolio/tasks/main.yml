@@ -1,8 +1,0 @@
-- name: Desplegar stack de portfolio
-  ansible.builtin.include_tasks: "{{ playbook_dir }}/tasks/compose-deploy.yml"
-  vars:
-    compose_project_dir: "{{ apps.portfolio.deploy_dir }}"
-    compose_template_src: "{{ role_path }}/templates/docker-compose.yml.j2"
-    compose_owner: "{{ admin_user }}"
-    compose_group: "{{ admin_user }}"
-    compose_pull_policy: always

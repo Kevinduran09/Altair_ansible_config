@@ -1,4 +1,8 @@
-.vault_pass
-ansible.cfg
-inventory/hosts.ini
-docs
+.vault_pass*
+.vault-password*
+.venv/
+.ansible/
+__pycache__/
+.pytest_cache/
+*.retry
+.env

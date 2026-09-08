@@ -1,0 +1,58 @@
+---
+- name: Render production templates with synthetic inventory values
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ../inventory/group_vars/all/all.yml
+    - ../inventory/group_vars/all/apps.yml
+    - ../inventory/group_vars/all/backup.yml
+    - ../inventory/group_vars/all/data-services.yml
+    - ../inventory/group_vars/all/network.yml
+    - ../inventory/group_vars/all/paths.yml
+    - ../inventory/group_vars/all/users.yml
+    - ../roles/backup/defaults/main.yml
+    - ../roles/netdata/defaults/main.yml
+    - vars.yml
+  vars:
+    render_root: "{{ playbook_dir }}/../.ansible/rendered"
+    app_templates: "{{ query('ansible.builtin.fileglob', playbook_dir ~ '/../roles/apps/templates/*/docker-compose.yml.j2') }}"
+  tasks:
+    - name: Create render directories
+      ansible.builtin.file:
+        path: "{{ render_root }}/{{ item }}"
+        state: directory
+        mode: "0700"
+      loop: "{{ (apps.keys() | list) + ['postgres', 'backup', 'netdata'] }}"
+
+    - name: Render application Compose files
+      ansible.builtin.template:
+        src: "../roles/apps/templates/{{ item }}/docker-compose.yml.j2"
+        dest: "{{ render_root }}/{{ item }}/docker-compose.yml"
+        mode: "0600"
+      loop: "{{ apps.keys() | list }}"
+
+    - name: Render n8n environment
+      ansible.builtin.template:
+        src: ../roles/apps/templates/n8n/.env.j2
+        dest: "{{ render_root }}/n8n/.env"
+        mode: "0600"
+
+    - name: Render PostgreSQL Compose file
+      ansible.builtin.template:
+        src: ../roles/data_services/templates/docker-compose.postgres.yml.j2
+        dest: "{{ render_root }}/postgres/docker-compose.yml"
+        mode: "0600"
+
+    - name: Render backup scripts and units
+      ansible.builtin.template:
+        src: "{{ item }}"
+        dest: "{{ render_root }}/backup/{{ item | basename | regex_replace('[.]j2$', '') }}"
+        mode: "0600"
+      loop: "{{ query('ansible.builtin.fileglob', playbook_dir ~ '/../roles/backup/templates/*.j2') }}"
+
+    - name: Render Netdata configuration
+      ansible.builtin.template:
+        src: ../roles/netdata/templates/netdata.conf.j2
+        dest: "{{ render_root }}/netdata/netdata.conf"
+        mode: "0600"

@@ -1,0 +1,7 @@
+---
+- name: Configure Netdata monitoring
+  hosts: servers
+  become: true
+  remote_user: "{{ ssh_login_user }}"
+  roles:
+    - netdata

@@ -7,6 +7,9 @@ npm_letsencrypt_dir: "{{ app_data_root }}/npm/letsencrypt"
 
 # App runtime variables
 n8n_port: 5678
+n8n_subdomain: n8n
+n8n_proxy_hops: 1
+app_timezone: America/Costa_Rica
 
 # App deployments (non-secret)
 apps:
@@ -20,6 +23,16 @@ apps:
     image_repo: "docker.n8n.io/n8nio/n8n"
     image_tag: "latest"
     container_name: "n8n"
+    owner: root
+    group: root
+    directories:
+      - path: "{{ n8n_data_dir }}"
+        owner: "1000"
+        group: "1000"
+        mode: "0750"
+      - path: "{{ apps_root }}/n8n/local-files"
+        owner: "1000"
+        group: "1000"
   uptime_kuma:
     deploy_dir: "{{ stacks_root }}/tools/uptime-kuma"
     image_repo: "louislam/uptime-kuma"

@@ -1,0 +1,5 @@
+---
+# Empty means all enabled apps. Public aliases remain supported by deploy-app.sh.
+apps_selected: []
+apps_pull_policy: missing
+apps_wait_timeout: 120

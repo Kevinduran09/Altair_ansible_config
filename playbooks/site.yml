@@ -1,0 +1,24 @@
+---
+- name: Configure infrastructure
+  ansible.builtin.import_playbook: bootstrap.yml
+  tags: infrastructure
+
+- name: Deploy applications
+  ansible.builtin.import_playbook: apps.yml
+  tags: apps
+
+- name: Configure optional databases
+  ansible.builtin.import_playbook: data-services.yml
+  tags: data-services
+
+- name: Configure monitoring
+  ansible.builtin.import_playbook: netdata.yml
+  tags: netdata
+
+- name: Configure backups
+  ansible.builtin.import_playbook: backup.yml
+  tags: backup
+
+- name: Reconcile proxy hosts
+  ansible.builtin.import_playbook: proxy-hosts.yml
+  tags: proxy-hosts

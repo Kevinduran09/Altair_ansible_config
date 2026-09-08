@@ -1,0 +1,80 @@
+---
+name: Ansible Deploy (Reusable)
+on:
+  workflow_call:
+    inputs:
+      scope:
+        type: string
+        default: apps
+      app:
+        type: string
+        default: all
+      check:
+        type: boolean
+        default: true
+    secrets:
+      ANSIBLE_VAULT_PASSWORD:
+        required: true
+      ANSIBLE_SSH_PRIVATE_KEY:
+        required: true
+      ANSIBLE_SSH_KNOWN_HOSTS:
+        required: true
+permissions:
+  contents: read
+jobs:
+  validate:
+    uses: ./.github/workflows/ci.yml
+  deploy:
+    needs: validate
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: altair
+    concurrency:
+      group: altair-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-ansible
+      - name: Refuse deployment of a superseded revision
+        shell: bash
+        run: |
+          set -euo pipefail
+          current="$(git ls-remote origin refs/heads/main | cut -f1)"
+          if [[ "$current" != "$GITHUB_SHA" ]]; then
+            printf 'main has advanced; run deployment from the current revision.\n' >&2
+            exit 1
+          fi
+      - name: Prepare ephemeral SSH and Vault credentials
+        env:
+          ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
+          ANSIBLE_SSH_PRIVATE_KEY: ${{ secrets.ANSIBLE_SSH_PRIVATE_KEY }}
+          ANSIBLE_SSH_KNOWN_HOSTS: ${{ secrets.ANSIBLE_SSH_KNOWN_HOSTS }}
+        run: python scripts/ci_credentials.py
+      - name: Check or apply the selected configuration
+        env:
+          DEPLOY_SCOPE: ${{ inputs.scope }}
+          DEPLOY_APP: ${{ inputs.app }}
+          DEPLOY_CHECK: ${{ inputs.check }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=(--limit target -e "ssh_private_key_file=$ANSIBLE_PRIVATE_KEY_FILE")
+          if [[ "$DEPLOY_CHECK" == true ]]; then args+=(--check); fi
+          case "$DEPLOY_SCOPE" in
+            apps)
+              scripts/deploy-app.sh "$DEPLOY_APP" target playbooks/apps.yml "${args[@]}"
+              ;;
+            infrastructure) ansible-playbook playbooks/bootstrap.yml "${args[@]}" ;;
+            backup) ansible-playbook playbooks/backup.yml "${args[@]}" ;;
+            proxy-hosts) ansible-playbook playbooks/proxy-hosts.yml "${args[@]}" ;;
+            data-services) ansible-playbook playbooks/data-services.yml "${args[@]}" ;;
+            netdata) ansible-playbook playbooks/netdata.yml "${args[@]}" ;;
+            all) ansible-playbook playbooks/site.yml "${args[@]}" ;;
+            *) printf 'Unsupported deployment scope\n' >&2; exit 2 ;;
+          esac
+      - name: Remove temporary credentials
+        if: always()
+        run: rm -rf -- "$RUNNER_TEMP/altair-credentials"

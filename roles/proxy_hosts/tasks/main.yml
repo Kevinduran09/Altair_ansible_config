@@ -1,0 +1,22 @@
+---
+- name: Load and validate proxy definitions
+  ansible.builtin.include_tasks: load.yml
+
+- name: Explain API check-mode limitation
+  ansible.builtin.debug:
+    msg: Proxy definitions validated; NPM API reconciliation and certificate issuance are skipped in check mode.
+  when: ansible_check_mode
+
+- name: Reconcile NPM resources
+  when: not ansible_check_mode
+  block:
+    - name: Authenticate
+      ansible.builtin.include_tasks: auth.yml
+    - name: Reconcile hosts
+      ansible.builtin.include_tasks: hosts.yml
+    - name: Reconcile certificates
+      ansible.builtin.include_tasks: certs.yml
+    - name: Assign certificates
+      ansible.builtin.include_tasks: apply_ssl.yml
+    - name: Report configured hosts
+      ansible.builtin.include_tasks: report.yml

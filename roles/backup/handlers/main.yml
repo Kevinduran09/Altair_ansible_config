@@ -1,0 +1,7 @@
+---
+- name: Restart backup timer
+  ansible.builtin.systemd_service:
+    name: "{{ backup_systemd_unit_name }}.timer"
+    daemon_reload: true
+    state: restarted
+  when: backup_enabled | bool

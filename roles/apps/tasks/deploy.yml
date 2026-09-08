@@ -1,0 +1,21 @@
+---
+- name: Validate application definition
+  ansible.builtin.assert:
+    that:
+      - application.value.deploy_dir is match('^/')
+      - application.value.image_repo | length > 0
+      - application.value.image_tag | string | length > 0
+      - application.value.container_name | length > 0
+
+- name: Deploy application through shared Compose role
+  ansible.builtin.include_role:
+    name: compose
+  vars:
+    compose_project_dir: "{{ application.value.deploy_dir }}"
+    compose_template_src: "{{ playbook_dir }}/../roles/apps/templates/{{ application.key }}/docker-compose.yml.j2"
+    compose_env_template_src: "{{ playbook_dir ~ '/../roles/apps/templates/n8n/.env.j2' if application.key == 'n8n' else '' }}"
+    compose_owner: "{{ application.value.owner | default(admin_user) }}"
+    compose_group: "{{ application.value.group | default(admin_user) }}"
+    compose_directories: "{{ application.value.directories | default([]) }}"
+    compose_pull_policy: "{{ application.value.pull_policy | default(apps_pull_policy) }}"
+    compose_wait_timeout: "{{ apps_wait_timeout }}"

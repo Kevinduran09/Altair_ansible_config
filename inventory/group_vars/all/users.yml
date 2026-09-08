@@ -14,6 +14,5 @@ managed_users:
 protected_users:
   - root
 
-
 remove_unmanaged_users: false
 users_to_remove: []

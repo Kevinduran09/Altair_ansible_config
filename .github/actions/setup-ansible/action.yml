@@ -1,0 +1,16 @@
+---
+name: Setup Ansible
+description: Install the same pinned tools and collections used locally.
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+        cache: pip
+    - name: Install tools
+      shell: bash
+      run: python -m pip install -r requirements.txt
+    - name: Install collections
+      shell: bash
+      run: ansible-galaxy collection install -r requirements.yml

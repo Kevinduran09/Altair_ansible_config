@@ -1,0 +1,76 @@
+---
+- name: Validate Compose deployment inputs
+  ansible.builtin.assert:
+    that:
+      - compose_project_dir is defined
+      - compose_project_dir is match('^/')
+      - compose_template_src is defined
+      - compose_pull_policy in ['always', 'missing', 'never', 'policy']
+
+- name: Create Compose project directory
+  ansible.builtin.file:
+    path: "{{ compose_project_dir }}"
+    state: directory
+    owner: "{{ compose_owner }}"
+    group: "{{ compose_group }}"
+    mode: "{{ compose_dir_mode }}"
+
+- name: Create application directories without recursively changing existing data
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: "{{ item.owner | default(compose_owner) }}"
+    group: "{{ item.group | default(compose_group) }}"
+    mode: "{{ item.mode | default('0755') }}"
+  loop: "{{ compose_directories }}"
+  loop_control:
+    label: "{{ item.path }}"
+
+- name: Ensure external Docker networks exist
+  community.docker.docker_network:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ compose_networks }}"
+
+- name: Render Compose configuration
+  ansible.builtin.template:
+    src: "{{ compose_template_src }}"
+    dest: "{{ compose_project_dir }}/docker-compose.yml"
+    owner: "{{ compose_owner }}"
+    group: "{{ compose_group }}"
+    mode: "{{ compose_file_mode }}"
+  no_log: "{{ compose_sensitive }}"
+  diff: "{{ not compose_sensitive }}"
+
+- name: Render private environment file
+  ansible.builtin.template:
+    src: "{{ compose_env_template_src }}"
+    dest: "{{ compose_project_dir }}/.env"
+    owner: "{{ compose_owner }}"
+    group: "{{ compose_group }}"
+    mode: "0600"
+  when: compose_env_template_src | length > 0
+  no_log: true
+  diff: false
+
+- name: Inspect existing Compose file for check mode
+  ansible.builtin.stat:
+    path: "{{ compose_project_dir }}/docker-compose.yml"
+  register: compose_existing_file
+  when: ansible_check_mode
+
+- name: Reconcile stack and wait for containers
+  community.docker.docker_compose_v2:
+    project_src: "{{ compose_project_dir }}"
+    state: present
+    pull: "{{ compose_pull_policy }}"
+    wait: "{{ compose_wait }}"
+    wait_timeout: "{{ compose_wait_timeout }}"
+    remove_orphans: false
+  when: not ansible_check_mode or compose_existing_file.stat.exists
+  no_log: "{{ compose_sensitive }}"
+
+- name: Explain first deployment check-mode limitation
+  ansible.builtin.debug:
+    msg: Compose execution skipped because check mode cannot create the project's first configuration file.
+  when: ansible_check_mode and not compose_existing_file.stat.exists

@@ -4,4 +4,4 @@
   remote_user: "{{ ssh_login_user }}"
 
   roles:
-    - proxy-hosts
+    - proxy_hosts

@@ -1,7 +1,5 @@
-- name: Desplegar Portfolio en ALTAIR
-  hosts: servers
-  become: true
-  remote_user: "{{ ssh_login_user }}"
-
-  roles:
-    - portfolio
+---
+- name: Deploy portfolio through the application catalog
+  ansible.builtin.import_playbook: apps.yml
+  vars:
+    apps_selected: [portfolio]

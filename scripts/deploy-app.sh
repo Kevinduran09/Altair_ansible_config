@@ -1,40 +1,20 @@
 #!/usr/bin/env bash
-
 set -euo pipefail
-
-usage() {
-  printf 'Uso: %s <app_tag> [limit] [playbook] [args_extra...]\n' "$0"
-  printf 'Ejemplo: %s portfolio target playbooks/apps.yml -vv\n' "$0"
-}
-
-if [[ ${1:-} == "-h" || ${1:-} == "--help" ]]; then
-  usage
+if [[ $# -eq 0 || ${1:-} == --help || ${1:-} == -h ]]; then
+  printf 'Usage: %s <app|app,app|all|netdata> [limit] [playbook] [ansible args...]\n' "$0"
   exit 0
 fi
-
-if [[ $# -lt 1 ]]; then
-  usage
-  exit 1
-fi
-
-app_tag="$1"
+cd "$(dirname "$0")/.."
+app="$1"
 limit_host="${2:-target}"
-playbook_file="${3:-playbooks/apps.yml}"
-
-if [[ ! -f "$playbook_file" ]]; then
-  printf 'ERROR playbook no existe: %s\n' "$playbook_file" >&2
-  exit 3
+playbook="${3:-playbooks/apps.yml}"
+extra_args=("${@:4}")
+if [[ "$app" == netdata ]]; then
+  exec ansible-playbook playbooks/netdata.yml --limit "$limit_host" "${extra_args[@]}"
 fi
-
-if ! command -v ansible-playbook >/dev/null 2>&1; then
-  printf 'ERROR ansible-playbook no está disponible en PATH\n' >&2
-  exit 8
-fi
-
-extra_args=()
-if [[ $# -gt 3 ]]; then
-  extra_args=("${@:4}")
-fi
-
-printf 'Deploy app=%s limit=%s playbook=%s\n' "$app_tag" "$limit_host" "$playbook_file"
-ansible-playbook "$playbook_file" --limit "$limit_host" --tags "$app_tag" "${extra_args[@]}"
+case "$playbook" in
+  playbooks/apps.yml|playbooks/portfolio.yml|playbooks/uptimekuma.yml) ;;
+  *) printf 'Unsupported app playbook: %s\n' "$playbook" >&2; exit 2 ;;
+esac
+selection="$(python3 scripts/app_catalog.py select "$app")"
+exec ansible-playbook playbooks/apps.yml --limit "$limit_host" --extra-vars "$selection" "${extra_args[@]}"
