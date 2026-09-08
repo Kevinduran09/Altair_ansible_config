@@ -65,7 +65,7 @@
 
 - name: Configurar llaves SSH autorizadas
   ansible.posix.authorized_key:
-    ansible.builtin.user: "{{ item.0.username }}"
+    user: "{{ item.0.username }}"
     key: "{{ item.1 }}"
     state: present
     manage_dir: false
