@@ -171,7 +171,7 @@ if [[ "$dry_run" == "true" ]]; then
   exit 0
 fi
 
-curl -sS -X POST "$webhook_url" \
+curl --fail-with-body --silent --show-error --max-time 30 -X POST "$webhook_url" \
   -H "Content-Type: application/json" \
   --data "$payload"
 

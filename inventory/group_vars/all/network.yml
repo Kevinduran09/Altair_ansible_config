@@ -10,3 +10,6 @@ admin_email: "kevinduran.net.123@gmail.com"
 # Proxy host directory
 project_root: "{{ playbook_dir }}/.."
 proxy_hosts_dir: "{{ project_root }}/proxy_hosts"
+
+npm_admin_bind: "127.0.0.1"
+portainer_bind: "127.0.0.1"

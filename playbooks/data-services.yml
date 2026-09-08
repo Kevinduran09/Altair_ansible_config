@@ -4,4 +4,4 @@
   remote_user: "{{ ssh_login_user }}"
 
   roles:
-    - data-services
+    - data_services

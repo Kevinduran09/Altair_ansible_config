@@ -1,14 +1,16 @@
-- name: Configuracion base del servidor (modo managed)
+---
+- name: Configure Altair infrastructure (managed)
   hosts: servers
   become: true
   remote_user: "{{ ssh_login_user }}"
   vars:
     bootstrap_mode: managed
-
   roles:
     - base
     - docker
-    - user-management
+    - users
     - stacks
-    - npm
+    - role: apps
+      vars:
+        apps_selected: [npm]
     - security

@@ -1,0 +1,20 @@
+---
+- name: Validate proxy definitions without contacting NPM
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ../inventory/group_vars/all/all.yml
+    - ../inventory/group_vars/all/apps.yml
+    - ../inventory/group_vars/all/backup.yml
+    - ../inventory/group_vars/all/data-services.yml
+    - ../inventory/group_vars/all/network.yml
+    - ../inventory/group_vars/all/paths.yml
+    - ../inventory/group_vars/all/users.yml
+    - ../roles/backup/defaults/main.yml
+    - ../roles/netdata/defaults/main.yml
+    - vars.yml
+  vars:
+    proxy_hosts_dir: "{{ playbook_dir }}/../proxy_hosts"
+  roles:
+    - proxy_hosts

@@ -1,0 +1,13 @@
+---
+# ── Resumen final ──
+
+- name: "report | Resumen de cada proxy host"
+  ansible.builtin.debug:
+    msg: >-
+      {{ item.meta.name }}
+      | {{ item.domain_names | join(', ') }}
+      | {{ item.forward_scheme }}://{{ item.forward_host }}:{{ item.forward_port }}
+      | cert: {{ proxy_hosts_certs_by_domains_final[(item.domain_names | sort | join(',') | lower)].id | default('SIN CERT') }}
+  loop: "{{ proxy_hosts_definitions }}"
+  loop_control:
+    label: "{{ item.meta.name }}"

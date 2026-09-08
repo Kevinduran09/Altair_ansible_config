@@ -1,0 +1,11 @@
+---
+# Synthetic values only. Never used by deployment workflows.
+server_ip: 127.0.0.1
+domain_name: example.invalid
+admin_user_ssh_pubkey: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFakeKeyForTestsOnly
+npm_identity: ci@example.invalid
+npm_secret: ci-only
+vault_postgres_password: 'ci$not#real:password'
+vault_restic_password: ci-only
+vault_backup_aws_access_key_id: ci-only
+vault_backup_aws_secret_access_key: ci-only

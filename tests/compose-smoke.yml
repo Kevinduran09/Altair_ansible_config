@@ -1,0 +1,15 @@
+---
+- name: Exercise Compose role on a disposable project
+  hosts: localhost
+  connection: local
+  gather_facts: true
+  vars:
+    ansible_python_interpreter: "{{ ansible_playbook_python }}"
+    admin_user: "{{ ansible_facts.user_id }}"
+    compose_project_dir: "{{ playbook_dir }}/../.ansible/smoke"
+    compose_template_src: "{{ playbook_dir }}/fixtures/compose.yml.j2"
+    compose_networks: []
+  tasks:
+    - name: Reconcile disposable stack
+      ansible.builtin.include_role:
+        name: compose

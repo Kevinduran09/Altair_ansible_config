@@ -1,0 +1,12 @@
+---
+compose_owner: "{{ admin_user }}"
+compose_group: "{{ admin_user }}"
+compose_dir_mode: "0755"
+compose_file_mode: "0644"
+compose_env_template_src: ""
+compose_pull_policy: missing
+compose_wait: true
+compose_wait_timeout: 120
+compose_sensitive: false
+compose_directories: []
+compose_networks: [proxy]

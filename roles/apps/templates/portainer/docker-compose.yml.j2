@@ -1,0 +1,16 @@
+services:
+  portainer:
+    image: {{ apps.portainer.image_repo }}:{{ apps.portainer.image_tag }}
+    container_name: {{ apps.portainer.container_name }}
+    restart: unless-stopped
+    ports:
+      - "{{ portainer_bind }}:9000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - {{ portainer_data_dir }}:/data
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    external: true

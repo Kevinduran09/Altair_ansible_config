@@ -1,0 +1,21 @@
+---
+- name: Deploy PostgreSQL when explicitly enabled
+  when: data_services_enabled | bool and postgres_enabled | bool
+  block:
+    - name: Validate PostgreSQL password
+      ansible.builtin.assert:
+        that:
+          - postgres_password | default('') | length > 0
+      no_log: true
+
+    - name: Deploy PostgreSQL through shared Compose role
+      ansible.builtin.include_role:
+        name: compose
+      vars:
+        compose_project_dir: "{{ data_services_root }}/postgres"
+        compose_template_src: "{{ playbook_dir }}/../roles/data_services/templates/docker-compose.postgres.yml.j2"
+        compose_file_mode: "0600"
+        compose_sensitive: true
+        compose_networks: []
+        compose_directories:
+          - path: "{{ postgres_data_dir }}"

@@ -1,0 +1,20 @@
+services:
+  npm:
+    image: {{ apps.npm.image_repo }}:{{ apps.npm.image_tag }}
+    container_name: {{ apps.npm.container_name }}
+    restart: unless-stopped
+    ports:
+      - "{{ npm_http_port }}:80"
+      - "{{ npm_https_port }}:443"
+      - "{{ npm_admin_bind }}:{{ npm_admin_port }}:81"
+    environment:
+      DISABLE_IPV6: "true"
+    volumes:
+      - {{ npm_data_dir }}:/data
+      - {{ npm_letsencrypt_dir }}:/etc/letsencrypt
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    external: true

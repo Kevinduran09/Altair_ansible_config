@@ -1,0 +1,21 @@
+extends: default
+ignore: |
+  .git/
+  .ansible/
+  .venv/
+  inventory/group_vars/all/vault.yml
+  inventory/group_vars/all/data-services.vault.yml
+rules:
+  document-start: disable
+  line-length: disable
+  truthy:
+    allowed-values: ['true', 'false']
+    check-keys: false
+  comments-indentation: disable
+  comments:
+    min-spaces-from-content: 1
+  braces:
+    max-spaces-inside: 1
+  octal-values:
+    forbid-implicit-octal: true
+    forbid-explicit-octal: true

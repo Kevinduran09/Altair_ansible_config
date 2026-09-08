@@ -1,0 +1,13 @@
+services:
+  uptime-kuma:
+    image: {{ apps.uptime_kuma.image_repo }}:{{ apps.uptime_kuma.image_tag }}
+    container_name: {{ apps.uptime_kuma.container_name }}
+    restart: unless-stopped
+    volumes:
+      - {{ uptime_kuma_data_dir }}:/app/data
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    external: true

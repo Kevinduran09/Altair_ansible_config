@@ -4,5 +4,5 @@
   remote_user: "{{ ssh_login_user }}"
 
   roles:
-    - role: backup-tools
+    - role: backup
       tags: backup-tools
